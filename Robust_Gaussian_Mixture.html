@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Robust Point Set Registration Using Gaussian Mixture Models</title>
+    <meta charset="utf-8" />
+    <script src="libs/header-attrs-2.30/header-attrs.js"></script>
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+    <link rel="stylesheet" href="Xaringan_Example/swan/swan.css" type="text/css" />
+    <link rel="stylesheet" href="Xaringan_Example/swan/swan-fonts.css" type="text/css" />
+    <link rel="stylesheet" href="Xaringan_Example/swan/swan-all-fonts.css" type="text/css" />
+    <link rel="stylesheet" href="Xaringan_Example/swan/tachyons_ext.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+.title[
+# Robust Point Set Registration Using Gaussian Mixture Models
+]
+.subtitle[
+## TPAM, 2011
+]
+.author[
+### <p>Bing Jian, Baba C. Vemuri<br>
+Department of CISE, University of Florida</p>
+]
+.date[
+### 2026.03.25
+]
+
+---
+
+# Introduction
+.pull-left.nt-01.f-90[
+  - asdasda
+]
+---
+## Method overview in the context of SLAM
+
+- Tracking과 Mapping을 두 개의 Parallel Threads로 분리 실행
+
+- Keyframe 기반 Mapping, Bundle Adjustment
+
+- Stereo pair(5-point algorithm)으로부터 dense하게 초기화
+- Epipolar search로 새로운 점 초기화
+
+- 기존 대비 큰 지도 생성 
+
+---
+## The Map
+- Textured patch 
+    - 각 특징점이 8x8 픽셀크기의 Locally Planar라고 가정
+    - Unit patch normal(`\(n_j\)`)
+    - Source keyframe(`\(N\)`)
+    - Pyramid level
+`$${}^W\boldsymbol{p}_j = ({}^Wx_j,{}^Wy_j, {}^Wz_j,1 )^\top \\{}^{K_i}\boldsymbol{E}_{W}$$`
+- Image pyramid
+    - Keyframe을 4레벨의 greyscale 8bpp 이미지 피라미드로 저장
+    - level 0 (640x480) &amp;rarr; level3 (80x60)
+???
+카메라가 움직이면 각도에 따라 모습이 달라보이는데 법선 벡터를 알면 패치가 어떻게 warping될지 예측 가능
+현재 카메라 영상과 matching해 tracking
+i번째 키프레임에 대한 Ki 카메라 중심좌표계
+bits per pixel
+---
+## coarse-to-fine Tracking
+.nt-02.nb-01[
+1. Decaying velocity motion model로부터 prior pose 생성 후 projection
+1. coarse단계
+    - coarsest-scale에서 50개 특징점 검색
+    - large pixel radius로 탐색해 매칭 시도
+    - 일부 패치에 대해서 subpixel refinement
+    - 매칭으로부터 초기 pose update 
+    (robust M-estimator + reweighted least squares)
+1. fine 단계
+    - coarse에서 구한 pose를 바탕으로 원본 해상도 이미지에서 1000개 reprojection
+    - 이전보다 좁은 radius로 탐색, 소수 패치에 대해서 subpixel refinement
+    - coarse에서 얻은 매칭들과 합쳐 최종 pose update
+]
+.f-80[
+### Image acquisition
+.nt-02[
+- Unibrain Fire-i video camera equipped
+with a 2.1mm wide-angle lens
+- 640 x 480 pixel YUV411 frames at 30Hz
+- Prior pose estimation &amp;rarr; Decaying velocity model (`\(v_t = \alpha \cdot v_{t-1}\)`)
+- 각 피라미드 레벨에서 FAST-10 코너 검출기 실행
+]
+]
+???
+constant velocity랑 다른점은 측정 데이터가 들어오지 않으면 카메라 속도가 점점 줄어들고 멈춤
+코너 검출은 비최대 억제없이 수행, 덩어리같은 코너 영역 클러스터 생성 
+---
+### Camera pose and projection
+- World to camera coordinate
+`$${}^{c}\boldsymbol{p}_{j} ={}^{c}\mathbf{E}_{W}{}^{W}\boldsymbol{p}_{j} \quad \mathbf{E}\in\mathbb{R}^{4\times4}, SE(3)$$`
+- Camera projection model
+`$$\begin{pmatrix} u_i \\ v_i \end{pmatrix}
+= \mathrm{CamProj}({}^{c}\mathbf{E}_{W}{}^{W}\boldsymbol{p}_{i})$$`
+- Pin-hole camera projection with radial FOV warping
+`$$\mathrm{CamProj}
+\begin{pmatrix} x \\ y \\ z \\ 1 \end{pmatrix}=
+\begin{pmatrix} u_0 \\ v_0 \end{pmatrix}
++
+\begin{bmatrix} f_u &amp; 0 \\ 0 &amp; f_v \end{bmatrix}
+\frac{r'}{r}
+\begin{pmatrix} \frac{x}{z} \\ \frac{y}{z} \end{pmatrix}$$`
+---
+### Camera pose and projection
+- Normalized radius
+`$$r = \sqrt{\frac{x^2+y^2}{z^2}}$$`
+- FOV radial-distortion mapping (Devernay-Faugeras model)
+`$$r' = \frac{1}{\omega}\arctan\left(2r\tan\frac{\omega}{2}\right)$$`
+- Changes to camera pose
+`$${}^{c}\mathbf{E}'_{\mathrm{w}} = M{}^{c}\mathbf{E}_{\mathrm{w}} = \exp(\mu){}^{c}\mathbf{E}_{\mathrm{w}}, \quad μ\in \mathbb{R}^6, \mathfrak{se}(3) \quad M\in\mathbb{R^{4\times4}}$$`
+???
+E는 4x4 SE(3) Transformation matrix
+M은 4x4 증분 camera motion
+---
+### Patch Search
+.f-90.mb-02[
+- 3d map point(`\(p\)`)가 현재 카메라 프레임의 어느 위치(`\(u_c,v_c\)`)에 있는지 찾아내는 과정
+- `\(Camproj()\)` 로 투영된 픽셀 위치 근처에서 실제 특징점 패치를 찾고 reprojection error를 구하기 위함
+]
+
+**1. Patch Warping (Affine Warp)**
+
+.pull-left[
+`$$\mathbf{A} = \begin{bmatrix}
+    \frac{\partial u_c}{\partial u_s} &amp; \frac{\partial u_c}{\partial v_s} \\
+    \frac{\partial v_c}{\partial u_s} &amp; \frac{\partial v_c}{\partial v_s}\end{bmatrix}$$`
+    ]
+    
+.pull-right.f-90[
+- `\({u_s,v_s}\)` : source keyframe
+- `\({u_c,v_c}\)` : current keyframe
+- `\(\mathbf{A}\)` : source에서 1px 움직일때 current가 얼마나 움직이는지 Jacobian
+]
+
+.mt-02[
+&amp;rarr; Performing these projections ensures that the warping matrix compensates (to first order) not only **changes in perspective** and
+**scale** but also the **variations in lens distortion** across the image.
+]
+---
+&lt;ol start="2"&gt;  
+&lt;li&gt;** Scale selection **&lt;/li&gt;
+- 특징점이 이미지 피라미드 레벨에서 어떤 크기로 보일지 계산
+1. `\(det(\mathbf{A})\)` : 단위 소스 픽셀이 현재 프레임(level 0)에서 차지하는 면적
+2. `\(\frac{det(\mathbf{A})}{4^l}\)` : 레벨 별 면적 감소량
+- 각 피라미드 레벨 `\(l\)` 에서의 면적이 1에 가까운 레벨 선택
+
+.f-90.mt-02[
+&lt;li&gt; **Patch search template**&lt;/li&gt;
+]
+  1. **템플릿 생성**: source keyframe에 저장된 특징점 패치 affine warping `\(\frac{A}{2^l}\)` 적용 후 Bilinear interpolation 샘플링 
+  1. **조명 보정**: 8x8 패치 내 모든 픽셀 평균 밝기값 빼 Zero-mean 처리
+  1. **후보 탐색**: 예측 위치 중심으로 fixed radius 정하고, 해당 영역 내 FAST Corners위치를를 target pyramid level에서 zero-mean 제곱합 계산 수행
+  1. **매칭 선책 및 판정**: 제곱합이 가장 작은 위치로 최적 매칭 선택하고, 임계값보다 작으면 해당 패치 발견으로 판단
+---
+&lt;ol start="5"&gt;  
+&lt;li&gt; **Sub-pixel refinement**&lt;/li&gt;
+.f-90[
+  - coarse set 특징점들에 적용해 추적 정확도 높임
+  - Lucas-Kanade는 매 반복마다 이미지 gradient가 달라져 느림
+  - IC(Inverse Compositional)로 타겟 이미지 대신 템플릿으로 `\(H^{-1}\)` 구해 이미지 보정 값 계산
+]
+.f-80[
+  `$$\sum_{\mathbf{x}} [T(\mathbf{W}(\mathbf{x}; \Delta \mathbf{p})) - I(\mathbf{W}(\mathbf{x}; \mathbf{p}))]^2$$`
+  `$$\Delta \mathbf{p} = H^{-1} \sum_{\mathbf{x}} \left[ \nabla T \frac{\partial \mathbf{W}}{\partial \mathbf{p}} \right]^T [I(\mathbf{W}(\mathbf{x}; \mathbf{p})) - T(\mathbf{x})]$$`
+  `$$H = \sum_{\mathbf{x}} \left[ \nabla T \frac{\partial \mathbf{W}}{\partial \mathbf{p}} \right]^T \left[ \nabla T \frac{\partial \mathbf{W}}{\partial \mathbf{p}} \right]$$`
+  `$$\mathbf{W}(\mathbf{x}; \mathbf{p}) \leftarrow \mathbf{W}(\mathbf{x}; \mathbf{p}) \circ \mathbf{W}(\mathbf{x}; \Delta \mathbf{p})^{-1}$$`
+.right.caption[S. Baker and I. Matthews, "Equivalence and efficiency of image alignment algorithms," CVPR 2001]
+]
+.f-80[
+    - `\(T(x)\)` : 템플릿 이미지 밝기
+    - `\(I(x)\)` : 현재 입력 이미지 밝기
+    - `\(\mathbf W(\mathbf x; \mathbf p)\)` : 파라미터 `\(\mathbf p\)`에 의해 정의된 좌표 변환 함수
+    - `\(\nabla T\)` : 템플릿 이미지의 밝기 변화량
+    - `\(\frac{\partial{W}}{\partial{p}}\)` : 워프함수의 자코비안
+]
+---
+### Pose Update
+- reprojection error 정의
+`$$e_j = \begin{pmatrix} \hat{u}_j \\ \hat{v}_j \end{pmatrix} - \operatorname{CamProj}\left(\exp(\mu) E_{cw} p_j\right)$$`
+- Iteratively Reweighted Least Squares (IRLS)
+`$$\mu' = \underset{\mu}{\operatorname{argmin}} \sum_{j \in S} \operatorname{Obj}\left(\frac{|e_j|}{\sigma_j}, \sigma_T\right)$$`
+  - `\(\sigma_j\)` : 측정 노이즈, `\(\sigma^2 = 2^{2l}\)` 적용해 coarse level일수록 오차 허용
+  - `\(\operatorname{Obj}\left(\cdot, \sigma_T\right)\)` : Tukey biweight 손실함수
+.right.nr-03.nt-10[![:scale 30%](img/ORB/tukey_loss.png)]
+---
+### Tracking quality and failure recovery
+.f-90[
+- 매 프레임 마다 관측 성공한 특징점 개수 비율로 추적 품질 추정
+- 추적이 상실될 경우 Relocalisation 절차 시행
+1. **저해상도 템플릿 생성**: .f-95[현재 프레임을 Small Blurry Image 템플릿으로 변환]
+
+1. **Global 유사도 연산**: .f-95[생성된 템플릿과 Global Map 내 모든 keyframe 템플릿 간 Zero-mean Sum of Squared Differences 기반 픽셀 단위 유사도 연산]
+1. **Reference KeyFrame** 선정: .f-95[ZMSSD Cost가 최소가 되는 최적의 keyframe]
+1. **SE(2) Direct Alignment 및 오차 도출**: .f-95[현재 프레임과 Reference KeyFrame 템플릿 간 2D 회전 및 평행이동 조정해 정합 후 오차 score 산출]
+
+1. **SE(3) Pose, 6-DoF 추정**: .f-95[도출된 SE(2) 변환을 `\(CamProj()\)` 통해 SE(3) 공간으로 승격시킨 후 Reference KeyFrame의 Global pose(SE(3))와 결합하여 현재 카메라의 6-DoF pose 추정]
+1. **Threshold 기반 복구 판정**: .f-95[산출된 최종 정합 오차가 threshold 미만일 경우 relocalisation 성공으로 판정]
+]
+???
+가우시안블러로 sbi
+---
+# Mapping
+.nt-02.pull-left-70[
+- Map initialization
+    1. 사용자가 카메라를 작업 공간 위에 놓고 첫번째 키 입력해 keyframe 생성
+    2. 첫 keyframe에서 coarsest level의 FAST 코너 선택해 2d patch 후보로 초기화
+    3. 사용자가 카메라를 이동 후 두번째 키 입력해 keyframe 생성
+    4. 5 point algorithm + RANSAC으로 essential matrix 추정 후 triangulation으로 초기 3d map 생성
+    5. Bundle Adjustment로 정밀화해 pose와 3D point 최적화
+    
+    - 스케일 고정을 위해 baseline을 10cm로 가정
+    - AR 맵 정렬 위해 RANSAC으로 3점 선택해  dominant plane 검출
+]
+.nt-03.nr-03[
+.pull-right-30[![](img/ORB/fig2.png)]
+]
+---
+### Keyframe insertion 
+.nt-01[
+- keyframe 선정 조건
+  - 관측 성능 비율 좋음(트래킹 품질 좋음)
+  - 마지막 keyframe이후 20 프레임 경과
+  - 관찰된 point들의 평균 깊이에 따라 최소 거리 결정
+  
+- keyframe 생성시 처리
+    - tracking thread: 추정한 pose와 특징 관측값으로 초기화 
+    - mapping thread: tracking에서 측정 못한 가시 포인트 reprojection해 추가 관측 시도
+  ]
+---
+### Epipolar search
+1. 후보점 선정
+    - 새 keyframe의 각 피라미드 레벨에서 계산해둔 FAST 코너 후보 불러옴
+    - NMS, Shi-Tomasi 점수로 잘 구별되는 코너만 남김
+    - 기존 관측 근처인 후보 제외해 신규 3d point 후보 생성
+1. 대응 keyframe 선택
+    - 각 후보를 triangulation할 두번째 뷰를 이미 있는 keyframe 중 카메라 중심과 거리가 가장 작은것 선택
+1. Matching
+    - keyframe의 관찰 point의 깊의 분포로 깊이 prior 설정해 탐색 범위 제한
+    - 동일 피라미드 레벨에서 epipolar search(zero-mean SSD)
+    - SSD가 임계값 이하일 경우 triangulation, map에 추가
+
+---
+.f-90[
+- structure matrix `\(\mathbf{M}\)`
+`$$\mathbf{M} = \sum_{x, y} w(x, y) \begin{pmatrix} I_x^2 &amp; I_x I_y \\ I_x I_y &amp; I_y^2 \end{pmatrix}$$`
+`$$w(u,v) = \exp\left(-\frac{u^2+v^2}{2\sigma^2}\right)$$`
+
+- Shi-Tomasi (Good Features to Track)
+`$$\text{score} = \min(\lambda_1, \lambda_2)$$`
+]
+???
+R이 크면 코너 강도가높음 
+min 람다가 임계값보다 크면 코너
+
+---
+### Bundle Adjustment
+- Reprojection error
+
+`$$\mathbf{e}_{ji}=\begin{bmatrix}\hat u_{ji}\\\hat v_{ji}\end{bmatrix}-\mathrm{CamProj}\!\big(\exp(\mu)\,E_{CW}\,p_j\big).$$`
+- Global BA
+
+`$$\{ \hat{\mu}_2,\dots,\hat{\mu}_N,\hat{p}_1,\dots,\hat{p}_M\}=\arg\min_{\{\mu\},\{p\}}\sum_{i=1}^{N}\sum_{j\in S_i}\mathrm{Obj}\!\big(\,|\mathbf{e}_{ji}|_{\sigma_{ji}},\sigma_T\big).$$`
+- Local BA
+`$$\{\hat{\mu}_x\}_{x\in X},\ \{\hat{p}_z\}_{z\in Z}=\arg\min_{\{\mu\},\{p\}}\sum_{i\in X\cup Y}\sum_{j\in Z\cap S_i}\mathrm{Obj}(i,j).$$`
+???
+지도 확장시에만 local ba
+최적화할 키프레임X과 관측되는 맵Z, 포인트 관측한 키프레임 집합 Y(과거에 최적화된 키프레임으로 고정되어있음)
+lie 파라미터 뮤, 관측이 픽셀과 표준편차 가짐
+에러는 표준편차로 정규화됨
+시그마t는 tukey인 m estimator에서 사용하는 스케일 추정치
+구현은 LM
+---
+### Data associatoin refinement
+.f-90.nt-01[
+-  mapping thread가 여유있는 시간에 새로운 point의 관측 집합을 추가하고 outlier 재측정
+- 우선순위가 낮은 process로 새 keyframe이 들어오면 중단
+1. 과거 keyframe에서 해당 point가 보이는지 재측정후 관측 추가
+1. BA에서 Tukey에 의해 가중치가 작아진(잔차가 큰) 원래 추적보다 좁은 radius로 해당 패치를 다시 찾음
+]
+
+### General implementation notes
+.f-90.nt-01[
+- Intel Core 2 Duo 2.66 GHz processor running Linux
+- C++ using the libCVD and TooN libraries
+- M-estimator 반복시 네번에 한번 reprojection, Jacobian 계산
+- 지도 점 `\(M &gt; 600\)`, keyframe `\(N &gt; 150\)` 일 경우 실시간 BA 불가
+- 일부 outlier, keyframe을 휴리스틱으로 처리
+]
+???
+추가된 새 포인트는 two view에서만 있으므로 관측 집합을 풍부하게함
+# Results
+- Tracking performance on live video
+    - 책상 및 주변 1,656 프레임의 실시간 비디오 입력
+    - Panning, Zoom-in, 빠른 움직임의 카메라 동작
+    - 의도적으로 카메라를 흔들어 추적 실패하게하고 Recovery 하는지 확인
+    - Keyframe 57개, Feature Points 4,997개
+    - 이미지 피라미드의 가장 세밀한 레벨(51%), 거친 레벨(7%)에 특징점 분포
+    - Relocalisation: 추적이 끊겨 다시 위치를 찾을 때 최대 90ms
+.center.mt-01[![:scale 80%](img/table1.png)]
+# Results
+.center.nt-02[![:scale 60%](img/ORB/PTAMfig3.png)]
+# Results
+.nt-02[
+- Mapping scalability
+    - Mapping thread에서 지도가 커짐에 따라 성능 저하
+    - 한계 제시: 6,000개 feature `\(M\)`, 150개 Keyframe `\(N\)` 
+    - Bundle Adjustment의 계산 비용
+        - Global: `\(O(N^3)\)`, 실제 구현 시 `\(O(N^2M)\)`
+        - Local: `\(O(NM)\)`
+]
+.center.mt-01[![:scale 40%](img/ORB/table2.png)]
+.center.mt-01[![:scale 70%](img/ORB/PTAMfig4.png)]
+# Results
+.nt-01[
+- Synthetic comparison with EKF-SLAM
+    - 두 벽면이 직각으로 만나는 가상 공간 활용해 Ground truth를 알고 있는 상태에서 오차 측정
+    - 18.2m 거리 600 프레임 동안 이동
+
+||EKF-SLAM|PTAM|
+|:---|:---|:---|
+|특징점 개수|6,600|114|
+|정확도| 6mm|135mm|
+|Tracking 성능| 20ms|3ms~40ms|
+.center[![:scale 70%](img/ORB/PTAMfig5.png)]
+]
+???
+andrew davison의 monoslam을 개선한 real time slam relocalisaition버전의 ekf slam
+ekf는 모든 특징점 간 covariance를 계산해야함 연산량 많음 
+PTAM은 ba해서 더 정밀하게 가능 
+# Results
+.nt-02[
+- Subjective comparison with EKF-SLAM
+  - SLAM wiggle: 특징점 depth를 추정하기 위해 카메라를 부드럽게 움직여야함 
+  - Scalability: 지도가 커질수록 특징 점수의 세제곱까지 비례해 증가
+  - Image Pyramid기법으로 Zoom-in,out에 강건성 보임 
+- AR with a hand-held camera 
+  - initialisation 완료시 즉시 AR application 사용 가능
+  - 카메라가 가상 세계와 상호작용하는 UI 도구로 사용 
+  - Ewok Panpage(슈팅게임), Virtual Magnifying Glass(가상 돋보기) 등 
+]
+.center[![:scale 55%](img/ORB/PTAMfig7.png)]
+---
+# 한계점
+1. corner 특징점 의존해 motion blur에 취약
+1. 반복된 구조일 경우 epipolar search에 outlier 발생 &lt;br&gt;
+&amp;rarr;
+1. Loop closing 부재&lt;br&gt;
+&amp;rarr;
+1. map point cloud의 기하학적 정보 부족으로 Occlusion 처리 불가&lt;br&gt;
+&amp;rarr;
+1. Relocalizaiton의 viewpoint 불변성 부족&lt;br&gt;
+&amp;rarr;
+1. initialization에 인간 개입 필요&lt;br&gt;
+&amp;rarr;
+
+???
+# Homography ??
+.nt-02[
+`$$\mathbf{x}_c \sim \mathbf{H}\mathbf{x}_s,\qquad\mathbf{x}_s=\begin{bmatrix}u_s\\v_s\\1\end{bmatrix},\quad\mathbf{x}_c=\begin{bmatrix}u_c\\v_c\\1\end{bmatrix}$$`
+`$$\mathbf{H}=\begin{bmatrix}h_{11} &amp; h_{12} &amp; h_{13}\\h_{21} &amp; h_{22} &amp; h_{23}\\h_{31} &amp; h_{32} &amp; h_{33}\end{bmatrix}, \quad \begin{bmatrix}\tilde{u}_c\\\tilde{v}_c\\\tilde{w}_c\end{bmatrix}=\mathbf{H}\begin{bmatrix}u_s\\v_s\\1\end{bmatrix}$$`
+`$$u_c=\frac{h_{11}u_s+h_{12}v_s+h_{13}}{h_{31}u_s+h_{32}v_s+h_{33}},\qquad v_c=\frac{h_{21}u_s+h_{22}v_s+h_{23}}{h_{31}u_s+h_{32}v_s+h_{33}}$$`
+`$$a=h_{11}u_s+h_{12}v_s+h_{13},\qquad b=h_{21}u_s+h_{22}v_s+h_{23},\qquad w=h_{31}u_s+h_{32}v_s+h_{33}$$`
+`$$u_c=\frac{a}{w},\qquad v_c=\frac{b}{w}$$`
+`$$\mathbf{A}=\begin{bmatrix}\frac{\partial u_c}{\partial u_s} &amp; \frac{\partial u_c}{\partial v_s}\\[4pt]\frac{\partial v_c}{\partial u_s} &amp;\frac{\partial v_c}{\partial v_s}\end{bmatrix}=\frac{1}{w}\begin{bmatrix}h_{11}-u_c h_{31} &amp; h_{12}-u_c h_{32}\\h_{21}-v_c h_{31} &amp; h_{22}-v_c h_{32}\end{bmatrix}\Bigg|_{(u_s^0,v_s^0)}$$`
+]
+---
+class: inverse, middle, center, title-slide
+# ORB SLAM: a Versatile and Accurate Monocular SLAM System
+## IEEE Transactions on Robotics. 2015
+&lt;div class="small" style="margin-top: 1.5em; font-size: 0.8em;"&gt;
+    &lt;a href="https://github.com/raulmur/ORB_SLAM" style="color: inherit;"&gt;https://github.com/raulmur/ORB_SLAM&lt;/a&gt;
+  &lt;/div&gt;
+---
+# Introduction
+## Bundle Adjustment (BA)
+- SLAM 시스템의 핵심 요소로 3D map point와 camera pose를 최적화하는 과정
+- 3D map point를 keyframe에 projection하여 reprojection error를 최소화하는 최적화 문제
+- 제공해야하는 조건   
+  1. Corresponding observations of map points(scene features) 
+  2. Keyframe selection avoiding unnecessary redundancy
+  3. A strong network configuration of keyframes and points
+  4. An Initial estimation for the non-linear optimization
+  5. A local map in exploration for scalability
+  6. The ability to perform fast global optimizations for loop closing
+  
+???
+키프레임들의 부분집합사이에서 동일한 3d map point에 대해서 정확한 관측값(픽셀좌표) 제공해야 최적화 가능
+keyframe이 너무 증가하면 BA 복잡성 증가-&gt; ORBSLAM은 survival of the fittest 전략 사용(적자생존)
+충분한 시차를 가진 keyframe 세트와 loop closure 매치로 달성
+BA는 non-linear optimization이므로 초기 추정값이 중요
+실시간 어플레키에션 실현 위해 BA는 탐색에서 지역 맵에 대해서만 수행하여 확장성 달성
+pose graph와 fast global optimization을 통해 루프 클로징 시 빠른 전역 최적화 수행
+---
+## main contribution
+- ORB: Use of the same features for all tasks
+- Covisibility graph: Real time operation in large environments
+- Essential graph: Real time loop closing 
+- DBoW2: Real time camera relocalization
+- Model selection: Automatic and robust initialization 
+- Spawn-and-cull: Survival of the fittest
+???
+ORB: binary descriptor(256bit), rotation, scale invariance
+한종류 특징점으로 고정시켜 구현 단순,메모리연산공유,추가변환 및 매칭 불일치 감소
+covisibilitiy graph : 킽프레임들 간 공통관찰된 map points수를 가중치로 하는 그래프, local로해서 투영매칭로컬ba수행 (전역맵크기와 무관하게 추적및 매핑 비용 제어)
+Essential graph : covisibility graph가 dense할수있으므로 loop closing에서 spanning tree + 강한 covisibility edge + loop edge만 보존한 sparse graph, 여기서 scale 까지 있는 Sim(3)기반 pose graph optimization
+DBoW2: place recognition(ORB vocabulary) 사용해 후보 키프레임 빠르게 검색, 후보들과 PnP/RANSAC으로 global 재현 수행해tracking실패시 회복 및 지도 재사용 강화
+Homography/Fundamental matrix : 초기 두프레임에서 두 가정을 병렬 RANSAC으로 계산해 점수기반(휴리스틱)으로 모델 선택하고 해 모호성, low-parallax 검출시 초기화 보류해 잘못된 맵 생성 방지
+spawn-and-cull: 키프레임/맵포인트는 관대하게 생성하고 엄격한검증(초기 몇 프레임동안 관찰 빈도, 최소관측 키프레임등)으로 트래킹 불가하거나 중복 요소 제거
+탐험 중 키프레임 빨리 추가하면 추적 강건성 증가, 반복 방문시 중복 키프레임 제거로 맵크기억제
+---
+# System Overview
+![](img/ORB/ovv.png)
+---
+## Feature Choice: ORB
+.pull-left-70.f-80.nt-02[
+1. 이미지 피라미드 생성(scale invariance)
+1. FAST keypoint detection
+    - 각 후보 중심 픽셀에 대해 반지름 3인 원 위 16개 주변 픽셀 검사
+    - 주변 픽셀 중 연속된 n개가 모두 밝거나 어두우면 후보로 판별
+    - 학습된 decision tree로 빠른 비교
+1. High speed test
+    - 원 위 4개 지점 후보 먼저 검사, 3개 이상 중심 픽셀보다 밝거나 어두운지 검사
+1. non maximum suprresion
+    - 인접한 중복 FAST 후보 중 local maximum만 남김
+1. Harris measure 
+    - 남은 FAST keypoint에 대해 계산 후 점수 높은 코너 선택 
+1. orientation 할당 (rotation invariance)
+    - keypoint 주변 patch에서 intensity centroid 계산
+1. steered rBREIF descriptor
+    - 31x31 주변 patch에서 binary test 분산 크고 correlation이 낮은 test pair에서 픽셀쌍 선별
+    - orientation에 따라 해당 pattern 회전후 intensity비교해 256bit binary descriptor생성
+
+]
+.pull-right-30.nr-02[![](img/ORB/orbfeature.png)]
+---
+## Three threads: Tracking, Local Mapping and Loop Closing
+### Tracking
+1. ORB 추출
+1. 초기 포즈 예측 (constans velocity motion model)
+1. 가이드 매칭 &amp; motion-only BA
+    - 예측 위치 주변에서 지역 맵 포인트들을 재투영해 매칭 후 motion only BA
+    - 이미지 영역 이탈, viewing direction, 관측가능거리로 매칭 제한 
+1. 트래킹 실패 시 relocalization
+    - Bag-of-Words 데이터베이스로 후보 keyframe 검색 → PnP + RANSAC 전역 포즈 복구
+1. 로컬 맵 조회
+    - covisibility graph로부터터 `\(K_1\)`, `\(K_2\)`, `\(K_{ref}\)`가져와 모든 map point reprojection해 추가 매칭
+1. 최종 포즈 최적화 및 키프레임 결정
+---
+### Local Mapping
+  - tracking에서 새 keyframe 삽입시 local BA 중단 
+    1. KeyFrame 삽입
+        - covisibility graph update, spanning tree 연결 갱신, BoW 벡터 계산
+    1. 최근 생성된 map point culling
+        - 초기 3개 keyframe 추적률(예측 가능 프레임의 &gt;25%에서 관측) 검사
+    1. 새 Map Point 생성
+        - keyframes 간 unmatched ORB 매칭
+        - epipolar constraints, triangulation 
+        - reprojection error, scale 일관성 확인 후 채택
+    1. Local BA
+        - 현재 키프레임 `\(K_i\)`, covisibility로 연결된 `\(K_c\)`, map points 최적화
+        - 관측했지만 covisibility로 연결되지 않으면 fixed
+    1. Keyframe Culling
+        - `\(K_c\)` 내 다른 keyframe의 90% 이상 point가 다른 최소 3개 키프레임에서 관측되면 중복으로 간주되어 제거
+---
+### Loop Closing
+.f-90[
+1. 후보 탐지
+  - 새 keyframe `\(K_i\)` BoW 벡터로 데이터베이스 질의
+  - covisibility 이웃들의 최저 점수 $s_{min} 기준으로 후보 필터링, 바로 연결된 이웃들은 제외
+  - 연속된 후보가 3번 검출되어야 루프 후보(`\(K_l\)`)로 인정
+1. Sim(3) 변환 계산 (rotation, translation, scale)
+  - `\(K_i\)`와 후보 간 3D-3D 대응 찾아 Horn 방법으로 Sim(3)추정
+  - RANSAC으로 검증하고 inlier로 최적화
+1. 루프 융합(Fusion)
+  - Sim(3)로 현재 keyframe pose update, 이웃에게 전파 
+  - 양측 map points reprojection해 일치하는 포인트들 합침
+  - covisibility edge 갱신해 루프 그래프에 연결 
+1. Essential Graph 최적화
+  - covisibility graph에서 spanning tree + 강한 covisibility(θmin) + 루프 엣지로 구성한 Essential Graph에 대해&lt;br&gt; Sim(3) 기반의 pose-graph 최적화해 dirft를 전체 그래프에 분산시킴
+  - g2o Levenberg–Marquardt
+]
+---
+### Map points, Keyframes and their Selection
+- map point `\(p_i\)`
+    - `\({}^{}X_{w,i}\)`, world coordinate system
+    - `\(n_i\)`, viewing direction
+    _ `\(D_i\)`, ORB descriptor
+    - `\(d_{max}, d_{min}\)`, distance which the point can be observed
+    - PTAM보다 Point수가 더 적음
+- keyframe `\(K_i\)`
+    - `\(\mathbf{T}_{iw}\)`, rigid body transformation 
+    - camera intrinsics (focal length, principal point)
+    - ORB features extracted in the frame(Undistored)
+---
+### Covisibility graph
+.pull-left-70.nt-01[
+.f-85.nt-02[
+- edge:두 KeyFrame이 공유하는 map point 수(가중치 θ, 기본 15)
+- 전체 연결 정보 담은 dense한 무향 가중 그래프
+- 로컬 맵 선택(어떤 KeyFrame들이 현재 프레임과 covisible한지), 특징 매칭 범위 결정, 키프레임 이웃 관계 판단
+]
+### Spanning tree 
+.f-85.nt-02[
+- covisibility graph 바탕으로 시스템이 점진적으로 유지
+- 모든 node를 연결하면서 edge는 최소화하는 spare tree
+- 가장 많은 map point를 공유하는 keyframe이 부모
+- Essential Graph의 기반 keyframe 삽입,삭제 시 연결성 유지 위해 사용
+]
+### Essential Graph
+.f-85.nt-02[
+- edge: Spanning tree edge + covisibility에서 가중치 큰(θ=100) edgs + loop closure edge
+- 모든 keyframe node는 동일하나 covisibility graph보다 edge 수 줄임 
+- pose graph optimization, Sim(3) 제약 가진 edge들로 구성되어 루프에서 생긴 drift를 전체 그래프에 분배
+]
+]
+.pull-right-30.nr-02[![](img/ORB/graph.png)]
+
+---
+## Bags of Words Place Recognition
+.f-90.nt-01[
+- DBoW2(Jaun D. Tardos) 기반 bags of words
+- database 구축 과정
+    1. ORB descriptor 추출
+    1. 비슷한 descriptor 끼리 hierarchical K-means로 clustering
+    1. 각 군집의 중심이 visual words, 단어 집합으로 tree구조 visual vocabulary 생성
+    1. inverse index로 DBoW2 database 구축 
+        - inverse index: 특정 단어(visual words)가 포함하는 문서들(keyframe) 나열
+        - BoW vector: ORB descriptor들이 vocabulary안에 어떤 word에 해당하는지 빈도 세어 histogram
+- query 반환 및 후보 필터링 
+    - 새로운 keyframe이 들어오면 BoW vector 사용해 database에 query해 유사 keyframe 검색
+    - covisibility graph에 연결된 keyframe 그룹화 해 점수 보정
+    - 최고 점수의 75% 보다 높은 keyframe 포함
+
+]
+???
+- keyframe간 visual overlap이 존재하므로 database query시 높은 점수를 가진 고유한 keyframe은 없음
+  - DBoW2는 시간상 가까운 이미지들의 점수를 합산 -&gt; 다른 시간이지만 같은 장소를 보는 keyframe은 포함못함
+- loop detection
+    - keyframe 생성 될 때마다 Bow 벡터와 database에 있는 모든 keyframe의 BoW vector 사이 유사도 계산 
+    - keyframe간 covisibility 고려해 BoW 점수 높은 keyframe 그룹 찾고 후보 연속성 감지해 판단 (뒤에..)
+- camera relocalization
+    - tracking 실패시 현재 frame BoW vector로 변환해 database에 query해 유사 keyframe 후보 반환
+    - 후보 keyframe들과 PnP로 pose estimation
+- feature matching
+    - vocalbulary tree의 특정 레벨의 동일 노드에 속하는 특징들로만 brute-force 제한해 속도 높임
+
+---
+# Automatic Map Initialization
+.f-90.nt-02[
+1. find initial correspondence
+  - current frame `\(F_c\)`에서 ORB 추출 후 reference frame `\(F_r\)`에서 `\(\mathbf{x}_c ↔ \mathbf{x}_r\)` 
+1. Parallel computation of the two models
+`$$\mathbf{x}_c = \mathbf{H}_{cr} \mathbf{x}_r \qquad \mathbf{x}_c^\top{}^{}\mathbf{F}_{cr}\mathbf{x}_r=0$$`
+  - normalized DLT, 8-point algorithm 사용해 RANSAC내에서 수행
+  - 반복 수행해 각 모델마다 점수 `\(S_M\)` 산출
+`$$\begin{align*}
+S_M &amp;= \sum_i \left( \rho_M \left( d_{cr}^2 \left( \mathbf{x}_c^i, \mathbf{x}_r^i, M \right) \right) + \rho_M \left( d_{rc}^2 \left( \mathbf{x}_c^i, \mathbf{x}_r^i, M \right) \right) \right) \\
+\rho_M(d^2) &amp;= \begin{cases}
+    \Gamma - d^2 &amp; \text{if } d^2 &lt; T_M \\
+    0 &amp; \text{if } d^2 \geq T_M
+\end{cases}
+\end{align*}$$`
+
+1. model selection
+$$ R_H = \frac{S_H}{S_H + S_F} \qquad R_H &gt; 0.45 &amp;rarr; homography$$
+]
+???
+`\(d_{cr}^2,d_{rc}^2\)`: symmetric transfer error 
+`\(T_M\)`: 95% `\(X^2\)` 기반 outlier 제거 임계값, `\(T_H=5.99\)`, `\(T_F=3.94\)` 1px 표준편차 가정
+`\(\Gamma\)`: `\(T_H\)`와 동일하고 두 모델이 inlier 영역에서 동일한 d에 대해 동일한 점수를 얻게함
+충분한 inlier가 없으면 프로세스 다시 시작
+가장 높은 점수를 가진 homography와 fundamental 유지
+---
+&lt;ol start="4"&gt;
+&lt;li&gt;Motion and Structure from Motion recovery&lt;/li&gt;
+
+1. homography
+  - 8개의 motion 가설 복구
+  - 각 가설에 triangulation 후 조건에 맞는 가설 선택
+      - 가장 많은 3d point가 시차를 가지고 관측
+     - 모든 3d point가 두 카메라 앞에 위치
+     - reprojection error 낮음
+1. fundamental matrix
+  - essential matrix로 변환
+`$${}^{}\mathbf{E}_{cr} = \mathbf{K}^T {}^{}\mathbf{F}_{cr} \mathbf{K}$$`
+  - SVD으로 4개 motion 가설 복구
+  - homography와 동일 조건으로 선택&lt;br&gt;
+
+&amp;rarr; BA 수행 
+---
+# Tracking
+.pull-left.nt-03[
+### ORB extraction
+- scale factor 1.2로 8개 scale에서 FAST 코너 추출
+  - 512x384 ~ 750x480: 1000개, KITTI(1241x376): 2000개
+  - 각 scale level을 grid로 나누고 셀 당 최소 5개의 코너 추출 시도
+  - 일부 셀에 코너 없으면 각 셀에 유지되는 코너 양 조절
+- ORB descriptor 계산
+  - PTAM patch correlation과 달리 모든 특징점 매칭에 사용
+]
+.pull-right.nr-05.nt-04[
+![:scale 80%](img/ORB/orbfig3.png)
+]
+
+---
+
+### Initial pose estimation from previous frame
+- constant velocity model로 pose 추정
+- guided search 
+    - 마지막 frame에서 현재 frame에 투영해 주변에서만 ORB feature 검색 및 매칭
+- 충분한 매칭이 없으면 wider search
+    -  탐색 반경 radius를 유동적으로 넓혀 매칭 재시도
+
+### Initial pose estimation via global relocalization
+- motion model tracking이 실패할 경우
+- frame을 BoW로 변환해 database에서 후보 keyframe query
+- 각 keyframe에 연관된 map point와 ORB 간 correspondence 계산
+- RANSAC, PnP로 pose 추정 후 keyframe map point의 추가 매치를 찾기 위한 guided search 수행
+---
+### Track Local Map
+- 현 frame에서 pose update와 더많은 map point 찾기위해 local map만 투영해 검색 
+  - `\(K_1\)`: 현재 frame과  map point를 공유하는 keyframe들 집합
+  - `\(K_2\)`: covisibility graph에서 `\(K_1\)`에 연결된 이웃 keyframe들
+  - `\(K_ref \in K_1\)`: 현재 frame과 가장 많은 map point를 공유하는 reference keyframe
+- `\(K_1\)`, `\(K_2\)`의 map point 검색
+  1. projection: 이미지 평면에 투영 후 이미지 영역 밖이면 폐기
+  1. viewing direction: `\(v \cdot n \geq cos(60^{\circ})\)`
+  1. distance: camera center-point `\([d_{min},d_{max}]\)`, ORB scale invariance 범위 유지 위해
+  1. scale: `\(s=\frac{d}{d_{min}}\)`, 이미지 피라미드 스케일 레벨
+  1. near descriptor matching: 투영위치 근처+ 예측 스케일+ 미매칭 후보만 Hamming distance 최소 대응 선택
+
+???
+viewing direction: 카메라중심부터 포인트까지 뷰잉잉레이와 포인트의 평균관측방향n간의 각도 
+distance:카메라와 포인트 간 거리 계산
+map point ORB descriptor `\(D\)`와 매칭되지 않은 현재 frame ORB feature중 투영 위치 `\(x\)`근처, 예측된 scale level에 해당하는 특징만 비교해 Hamming distance로 최적 대응 선택  
+---
+
+### New keyframe decision
+- 현재 frame에서 map point 대응이 모두 찾아지고 camera pose최적화 후 결정
+- 빠른 keyframe 삽입(spawn) %rarr; 이후 중복 제거(cull)
+1. global relocalization 이후 20 frame경과
+1. local mapping 유휴 상태 혹은 마지막 keyframe 삽입 후 20frame 이상 경과
+    - local mapping이 바쁘면 중지시키고 신규 keyframe처리 
+1. 현재 frame이 50개 이상 point tracking시
+1. tracks &lt; 90% of `\(K_ref\)`
+
+---
+# Local Mapping
+- 새로운 keyframe 처리하고 주변 지역에 대해 local BA 수행
+- local 단위에서 정확한 최적화해 추적 안정성 향상
+- 3d point 추가해 맵 확장
+- 불필요한 데이터 제거
+
+### Keyframe insertion
+1. covisibility graph update: 새 node `\(K_i\)`추가, 다른 keyframe과 공유 map point로 edge update
+1. spanning tree update: 가장 많은 map point를 공유하는 keyframe과 연결
+1. compute the BoW vector: triangulation위한 data association에 도움되는 BoW vector 계산
+---
+### Recent map points culling
+- 새로 triangulation 된 후 받아야할 검증
+1. 보일것으로 예측되는 frame들 중 &gt;25% 이상 실제 추적되어야 함
+1. 한개 이상 keyframe 경과시 최소 3개 keyframe에서 관찰되어야함
+- keyframe이 삭제되거나, local BA에서 outlier 제거 시 반영
+
+### New map point creation
+- `\(K_i\)`의 미매칭 ORB feature를 `\(K_c\)`와 매칭 &amp;rarr; BoW place recognition
+- epipolar constraint, triangulation
+- 두 카메라 depth, parallax, reprojection error, scale consistency 확인
+- 초기 맵 생성 후 주변 연결 keyframe에 projection해 추가 관측 검색 &amp;rarr; Track local map
+---
+
+### Local bundle adustment
+- Tracking thread와 병렬 실행
+- keyframe 삽입 시 interrupt
+- 현재 keyframe `\(K_i\)`, covisibility graph로 연결 된 이웃 keyframe들$K_c$, 관측하는 모든 map point 최적화
+- 같은 관측을 보지만 이웃이 아닌경우 최적화에 포함되나 고정됨
+
+### Local keyframe culling
+- `\(K_c\)` 중 90% map point가 최소 3개 다른 keyframe에서 동일하거나 세밀한 스케일에서 관측되면 제거
+
+---
+# Loop Closing
+- local mapping에서 처리된 마지막 keyframe `\(K_i\)` 받아 루프 감지 
+
+### Loop candidate detection
+1. `\(K_i\)` BoW vector와 covisibility graph 내 모든 이웃간 유사도 계산(`\(\theta_{min} = 30\)`)후 가장 낮은 `\(s_{min}\)`유지
+1. database query에서 `\(s_{min}\)`보다 낮은 모든 keyframe 제거
+1. `\(K_i\)`에 직접 연결된 keyframe제거
+1. 연속 3개 루프 후보가 covisible로 연결되어야 함 
+---
+
+### Compute the similarity transformation
+- scale drift를 이유로 Sim(3) 계산해야
+- input: `\(K_i\)`의 map point, 루프 후보 `\(K_l\)`의 map point 사이 ORB correspondence(`\(P_i,Q_i\)`의 3D-3D)
+1. RANSAC 반복으로 Sim(3) 생성
+    - Horn method로 similarity transform `\({}^{}S_{il}\)` 추정
+    - 모든 대응에 대해 error 측정 후 inlier 개수가 충분하지않으면 반복
+1. optimization, guided matching
+    - inlier와 residual 분포가 충분하면 루프로 수락
+---
+
+### Loop fusion
+- 중복된 map point 융합하고 loop closing 연결할 covisibility graph의 edge 삽입
+1. `\(K_i\)` pose 보정
+    - `\({}^{i}T_w\)`,${}^{l}S_{i}$,이웃에게 전파돼 연결 하며 루프 양쪽 정립
+1. guided search
+  - map point를 보정된 `\(K_i\)`와 이웃에 투영
+  - 좁은 영역에서 ORB 매칭 후 하나의 ID로 합침(fuse)
+1. covisibility edge 추가
+
+&amp;rarr; Essential graph optimization
+---
+
+# Appendix
+
+### Bundle Adjustment
+`$${}^{}X_{w,j} \in \mathbb R^3, \quad {}^{}T_{iw} \in SE(3), \quad {}^{}x_{i,j} \in \mathbb R^2$$`
+
+`$$\boldsymbol{e}_{i,j} = \boldsymbol{x}_{i,j} - \pi_i(\boldsymbol{T}_{iw}, \boldsymbol{X}_{w,j})$$`
+
+`$$\begin{align*}
+\pi_i(\mathbf{T}_{iw}, \mathbf{X}_{w,j}) &amp;= \begin{bmatrix} f_{i,u} \frac{x_{i,j}}{z_{i,j}} + c_{i,u} \\ f_{i,v} \frac{y_{i,j}}{z_{i,j}} + c_{i,v} \end{bmatrix} \\
+[x_{i,j} \quad y_{i,j} \quad z_{i,j}]^T &amp;= \mathbf{R}_{iw} \mathbf{X}_{w,j} + \mathbf{t}_{iw}
+\end{align*}$$`
+
+`$${}^{}R_{iw} \in SO(3), \quad {}^{}t_{iw} \in \mathbb R^3$$`
+
+- cost function
+`$$C = \sum_{i,j} \rho_h (\mathbf{e}_{i,j}^T \Omega_{i,j}^{-1} \mathbf{e}_{i,j})$$`
+- `\(\rho_h\)`: Huber loss
+- $\Omega_{i,j} $: 관측 covariance matrix 2x2
+- `\({}^{i}e_j\)`: reprojection error
+---
+
+### pose graph optimization
+`$$\mathbf{e}_{i,j} = \log_{\text{Sim(3)}}(\mathbf{S}_{ij} \mathbf{S}_{jw} \mathbf{S}_{iw}^{-1}), \quad \mathbf{e}_{i,j} \in \mathbb R^7$$`
+- cost function
+`$$C = \sum_{i,j} \left( \mathbf{e}_{i,j}^T \mathbf{\Lambda}_{i,j} \mathbf{e}_{i,j} \right)$$`
+- `\(\mathbf{\Lambda}_{i,j}\)`: information matrix of edge(identity)
+- loop closing에서는 keyframe 하나를 anchor로 고정하고 나머지 keyframe을 조정 
+---
+### Relative Sim(3) Optimization
+`$$\begin{align*}
+\mathbf{e}_1 &amp;= \mathbf{x}_{1,i} - \pi_1(\mathbf{S}_{12}, \mathbf{X}_{2,j}) \\
+\mathbf{e}_2 &amp;= \mathbf{x}_{2,j} - \pi_2(\mathbf{S}_{12}^{-1}, \mathbf{X}_{1,i})
+\end{align*}$$`
+
+- cost function
+`$$C = \sum_n \left( \rho_h(\mathbf{e}_1^T \Omega_{1,i}^{-1} \mathbf{e}_1) + \rho_h(\mathbf{e}_2^T \Omega_{2,j}^{-1} \mathbf{e}_2) \right)$$`
+???
+Full BA:
+최적화 변수: 모든 키프레임의 poses `\(T_{iw}\)`와 모든 맵 포인트 위치 `\(X_{w,j}\)`
+보통 첫 키프레임 하나를 고정 → 전체 자유도 고정
+사용 시기: 초기 지도 생성 직후나 오프라인 정밀 정제
+
+
+Local BA:
+최적화 변수: 현재 처리 중인 keyframe `\(K_i\)`, 그것과 직접 연결된 키프레임들$K_c$, 그리고 이들이 관측하는 모든 맵 포인트들
+고정되는 항목: 지역 외부의 키프레임(또는 지역과 연결되지만 고정으로 둔 키프레임) , 이들은 constraint(관측)으로는 등장하지만 변수로는 업데이트되지 않음
+목적: 국소 영역의 정확도를 높이고, 연산량을 제한해 실시간으로 동작 가능하게 함
+
+
+Motion-only BA (pose optimization):
+최적화 변수: 현재 프레임(또는 추정하려는 카메라)의 pose `\(T_{iw}\)` 만
+고정되는 항목: 모든 맵 포인트 `\(X_{w,j}\)` 
+목적: 프레임별 추적 단계에서 빠르게 포즈를 정제(예: 이전 프레임 예측 → guided matching → 모션-온리 최적화)
+---
+class: center, middle
+
+# 감사합니다
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script src="Xaringan_Example/swan/macros.js"></script>
+<script>var slideshow = remark.create({
+  "ratio": "16:9",
+  "highlightStyle": "github",
+  "highlightLines": true,
+  "countIncrementalSlides": false,
+  "scale": true
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

@@ -1,0 +1,145 @@
+.title-slide .remark-slide-number {
+  display: none;
+}
+
+.title-slide .author-line {
+  font-size: 0.85em;
+  letter-spacing: 0.2px;
+}
+
+.title-slide .affiliation {
+  font-size: 0.65em;
+  color: #bbbbbb;
+  font-style: italic;
+}
+
+.title-slide h2 {
+  margin-bottom: 0px !important;
+  padding-bottom: 0px !important;
+}
+.title-slide h3 {
+  margin-top: 0px !important;
+  padding-top: 0px !important;
+}
+.title-slide sup {
+  font-size: 0.6em;
+  vertical-align: super;
+  color: #f0c040;
+}
+
+.contents-list {
+  font-size: 30px;
+  font-family: 'Trebuchet MS', sans-serif;
+  line-height: 1.5;
+}
+
+.main-text {
+  font-size: 30px;
+  font-family: 'Trebuchet MS', sans-serif;
+  line-height: 1.5;
+}
+
+
+.remark-slide-content:not(.title-slide) h1{
+  font-size: 40px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+.remark-slide-content:not(.title-slide) h2{
+  font-size: 25px;
+  margin-top: 8px;
+  margin-bottom: 5px;
+}
+
+.remark-slide-content ul {
+  font-size: 18px;
+}
+.remark-slide-content ol {
+  font-size: 18px;
+}
+
+.remark-slide-content ul ul {
+  font-size: 15px;
+}
+
+.remark-slide-content ul ul ul {
+  font-size: 12px;
+}
+
+.remark-slide-number {
+  font-size: 16px;
+  bottom: 40px;
+  right: 10px;
+}
+
+.remark-slide-content:not(.title-slide)::before {
+  content: "";
+  position: absolute;
+  bottom: 8px;
+  right: 10px;
+  width: 80px;
+  height: 30px;
+  background: url('img/lab_logo.png') no-repeat center;
+  background-size: contain;
+}
+
+.bottom-center-img {
+  position: absolute;
+  bottom: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 80%;
+}
+
+.bottom-right-img {
+  position: absolute;
+  bottom: 60px;
+  right: 20px;
+  max-width: 40%;
+}
+
+.pull-left, .pull-right {
+  width: 48%;
+}
+
+.pull-left {
+  margin-top: 30px;
+}
+
+.pull-left img, .pull-right img {
+  display: block;
+  width: 100%;
+}
+
+.remark-slide-content:not(.title-slide)::before {
+  content: "";
+  position: absolute;
+  bottom: 8px;
+  right: 10px;
+  width: 80px;
+  height: 30px;
+  background: url('img/lab_logo.png') no-repeat center;
+  background-size: contain;
+}
+/* .caption-left {
+  position: absolute;
+  bottom: 50px;
+  left: 25%;
+  transform: translateX(-50%);
+  font-size: 16px;
+  font-style: italic;
+}
+
+.caption-right {
+  position: absolute;
+  bottom: 50px;
+  right: 25%;
+  transform: translateX(50%);
+  font-size: 16px;
+  font-style: italic;
+} */
+.caption {
+  font-size: 14px;
+  font-style: italic;
+}
+
