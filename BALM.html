@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>BALM: Bundle Adjustment for Lidar Mapping</title>
+    <meta charset="utf-8" />
+    <script src="libs/header-attrs-2.30/header-attrs.js"></script>
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+    <link rel="stylesheet" href="Xaringan_Example/swan/swan.css" type="text/css" />
+    <link rel="stylesheet" href="Xaringan_Example/swan/swan-fonts.css" type="text/css" />
+    <link rel="stylesheet" href="Xaringan_Example/swan/swan-all-fonts.css" type="text/css" />
+    <link rel="stylesheet" href="Xaringan_Example/swan/tachyons_ext.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+.title[
+# BALM: Bundle Adjustment for Lidar Mapping
+]
+.subtitle[
+## RA-L, 2021
+]
+.author[
+### <p>Zheng Liu, Fu Zhang<br>
+Department of Mechanical Engineering, The University of Hong Kong</p>
+]
+.date[
+### 2026.03.30
+]
+
+---
+
+## Index
+  - Introduction
+  
+  - System Framework
+
+  - BA Formulation
+  
+  - Adaptive Voxelization
+  
+  - LOAM with Local BA
+  
+  - Experimental 
+
+  - Conclusion
+---
+## Introduction
+.nt-02.pull-left[
+![:scale 100%](fig/BALM/fig1_BA_comparison.png)
+]
+.nt-02.pull-right[
+![:scale 100%](fig/BALM/fig3_feature.png)
+]
+.f-90[
+- **Visual BA** : 동일한 feature point에 대한 다중 관측 제약
+  
+- **LiDAR BA in BALM** : faeture points가 동일한 planar/edge위 존재하도록 함
+  
+- **Sparse LiDAR**에선 point-to-point BA보다, point-to-plane/line BA 적용
+]
+---
+## System Framework
+.nt-02.f-90[
+- **Feature extraction** : raw point에서 edge/planar feature point 추출
+  
+- **Odometry** : 새로운 scan의 rough pose 구함(Local BA전 pose)
+  
+- **Global transform** : rough pose를 통해서 feature point을 Global frame으로 변환
+  
+- **Adaptive Voxelization** : 각 Edge Voxel map/Planar Voxel map에 넣고 Adative Voxelization 수행
+  
+- **Local BA** : 각 Voxel의 mean/covariance를 통해 eigenvalue 기반 cost로 local BA 수행
+  
+- **Update/Marginalize** : pose와 Voxel 업데이트, 오래된 점은 marginalize
+]
+---
+## BA Formulation
+.nt-02.f-90[
+- mean, covariance 정의
+
+`$$\bar{\mathbf{p}} = \frac{1}{N} \sum_{i=1}^{N} \mathbf{p}_i; A = \frac{1}{N} \sum_{i=1}^{N} (\mathbf{p}_i - \bar{\mathbf{p}})(\mathbf{p}_i - \bar{\mathbf{p}})^T$$`
+
+- Local BA 문제 정의(Planar)]
+.f-95[
+`$$\begin{align*}
+(\mathbf{T}^*, \mathbf{n}^*, \mathbf{q}^*) &amp;= \arg \min_{T,n,q} \frac{1}{N} \sum_{i=1}^N (\mathbf{n}^T (\mathbf{p}_i - \mathbf{q}))^2 \\
+&amp;= \arg \min_{T} \left( \underbrace{\min_{n,q} \frac{1}{N} \sum_{i=1}^N (\mathbf{n}^T (\mathbf{p}_i - \mathbf{q}))^2}_{=\lambda_3(\mathbf{A}); \text{ if } \mathbf{n}^*=\mathbf{u}_3, \mathbf{q}^*=\bar{\mathbf{p}}} \right)
+\end{align*}$$`
+]
+.f-90[
+- planar feature의 **최적 파라미터 (n,q)를 closed-form**으로 구해 **pose-only BA** 문제로 변환 
+]
+???
+u3는 covariance A의 세번째 eigenvector, 즉 가장 작은 eigenvalue에 대응하는 벡터
+planar feature에서는 평면법선방향, 점들이 가장 덜 퍼지는 방향
+밑에 if는 최소값을 달성하는 최적값이 저것들임!
+이거 증명방법은 [pi-q = (pi-p바) + (p바-q)]로 대입해서 풀면 결국에는 n^TAn으로 나옴.
+planar에서 lamda3인 이유는 평면 법선 분산 방향이 가장 작아야 하기 때문임. 그래서 가장 작은 eigenvalue에 대응하는 eigenvector가 법선벡터가 되는 것임.
+즉, 평면 안 두 방향의 분산은 커도됨. 근데 수직한 방향은 작아야함.
+**plane은 2차원 구조이므로 한방향만 얇아야함. 그 얇은 방향이 법선방향이기 때문에 분산이 가장작은 고유값이어서 lamda3가 cost가 됨**
+---
+## BA Formulation
+.nt-02.f-90[
+- Local BA 문제 정의(Edge)
+]
+.f-95[
+`$$\begin{align*}
+(\mathbf{T}^{*}, \mathbf{n}^{*}, \mathbf{q}^{*}) &amp;= \underset{\mathbf{T}, \mathbf{n}, \mathbf{q}}{\arg \min} \frac{1}{N} \sum_{i=1}^{N} \left\|\left(\mathbf{I} - \mathbf{n n}^{T}\right)\left(\mathbf{p}_{i} - \mathbf{q}\right)\right\|_{2}^{2} \\
+&amp;= \underset{\mathbf{T}}{\arg \min} \underbrace{\left(\underset{\mathbf{n}, \mathbf{q}}{\min} \frac{1}{N} \sum_{i=1}^{N} \left\|\left(\mathbf{I} - \mathbf{n n}^{T}\right)\left(\mathbf{p}_{i} - \mathbf{q}\right)\right\|_{2}^{2}\right)}_{=\text{Tr}(\mathbf{A})-\lambda_{1}(\mathbf{A})=\lambda_{2}(\mathbf{A})+\lambda_{3}(\mathbf{A}); \text{ if } \mathbf{n}^{*}=\mathbf{u}_{1}, \mathbf{q}^{*}=\overline{\mathbf{p}}}
+\end{align*}$$`
+- edge feature의 **최적 파라미터 (n,q)를 closed-form**으로 구해 **pose-only BA** 문제로 변환 
+]
+
+.f-90[
+- 최적화 대상은 voxel하나의 egienvalue cost
+`$$\lambda_k(\mathbf{p}(\mathbf{T}))$$`
+  - `\(\mathbf{T}\)`에 대해, `\(\mathbf{p} = \left[ \mathbf{p}_1^T \ \cdots \ \mathbf{p}_N^T \right]^T\)`는 동일한 feautre point의 벡터
+]
+???
+이거도 증명과정 planar랑 똑같이 [pi-q = (pi-p바) + (p바-q)]로 대입해서 풀면 결국에는 Tr(A) - lambda1이 나옴
+(I-nn^T) : n에 수직한 평면의 projection
+(I-nn^T)(pi-q) : 점 pi가 pi-q 벡터에서 얼머나 옆으로 벗어났는가?
+norm제곱으로 점에서 직선까지의 제곱거리 =&gt; 점들이 어떤 한 edge line에 최대한 가깝에 하자! 
+edge에서는 line방향 분산 lamda1는 커도됨. 근데 나머지 두 수직방향 2,3는 작아야함 그래서 Tr(A) - lambda1이 최소가 되는 지점이 최적점이 되는 것임.
+**edge는 1차원 구조이므로 한방향만 길고, 나머지는 얆아야함 그래서 큰 방향 lamda1는 남기고 수직방향 lambda2+lambda3가 cost가 됨**
+---
+## BA Formulation
+.nt-02.f-90[
+- 점 `\(\mathbf{p}_i\)`에 대한 고유값 `\(\lambda_k\)`가 얼마나 변하는지, 1차미분 **Gradient**
+  - planar voxel이면 `\(\lambda_3\)`, edge voxel이면 `\(\lambda_2 + \lambda_3\)`
+  - 개별 `\(\lambda_k\)`에 대한 미분 공식]
+
+$$
+\frac{\partial \lambda_k}{\partial \mathbf{p}_i}
+= \frac{2}{N} (\mathbf{p}_i - \bar{\mathbf{p}})^T \mathbf{u}_k \mathbf{u}_k^T
+$$
+
+.f-90[
+- **Gradient**를 점 `\(\mathbf{p}_j\)`에 대해 미분한, 2차미분 **Hessian**
+  - `\(i=j\)`일경우 같은점 `\(\mathbf{p}_i\)`를 두번 미분. self-curvature
+  - `\(i\neq j\)`일경우 서로 다른점 `\(\mathbf{p}_i, \mathbf{p}_j\)` 사이의 교차 미분. cross-coupling
+]
+
+$$
+\frac{\partial^2 \lambda_k}{\partial \mathbf{p}_j \partial \mathbf{p}_i}
+=
+`\begin{cases}
+\frac{2}{N}
+\left(
+\frac{N-1}{N}\mathbf{u}_k \mathbf{u}_k^T
++
+\mathbf{u}_k (\mathbf{p}_i-\bar{\mathbf{p}})^T \mathbf{UF}_k^{p_j}
++
+\mathbf{UF}_k^{p_j}\mathbf{u}_k^T(\mathbf{p}_i-\bar{\mathbf{p}})
+\right),
+&amp; i=j, \\[1ex]
+\frac{2}{N}
+\left(
+-\frac{1}{N}\mathbf{u}_k \mathbf{u}_k^T
++
+\mathbf{u}_k (\mathbf{p}_i-\bar{\mathbf{p}})^T \mathbf{UF}_k^{p_j}
++
+\mathbf{UF}_k^{p_j}\mathbf{u}_k^T(\mathbf{p}_i-\bar{\mathbf{p}})
+\right),
+&amp; i\neq j.
+\end{cases}`
+$$
+???
+Gradient수식은 점 pi가 uk방향으로 평균에서 벗어나 있을수록 그 점은 `\(lambda_k\)`에 더 큰 영향을 미친다는 것을 보여줌
+즉, voxel의 eigenvalue는 voxel내 점들의 uk방향으로의 퍼짐 정도에 민감하게 반응함
+
+Hessian에서 i=j인 경우 내 점을 움직이면 내점도 변하고 평균도 같이 변함
+i=/j인 경우 다른점을 움직이면 내 점은 안변하고 평균만 변함
+첫번째항은 점-평균구조에 생김. 같은점 미분시 자기자신 영향 큼 / 다른점 미분시 평균통해서간 간점영향 부호가 음수
+두번째항은 고유벡터 uk가 바뀌는항.
+세번째항은 고유벡터 변화항
+1. 평균점의 직접변화
+2. eigenvector 변화 / eigenvector 변화의 대칭짝
+---
+## BA Formulation
+.nt-02.f-90[
+  - 점 `\(\mathbf{p}_i\)`를 움직였을때 고유벡터 `\(\mathbf{u}_k\)`의 변화
+    - `\(\mathbf{F}_{k}^{\mathbf{P}_{j}}\)`는 `\(\mathbf{p}_j\)`에 대한 `\(\mathbf{u}_k\)`의 변화량을 나타내는 3x3 행렬. 즉 **eignevector senstivity**
+]
+
+`$$\mathbf{F}_{k}^{\mathbf{P}_{j}} = \begin{bmatrix}
+\mathbf{F}_{1,k}^{\mathbf{P}_{j}} \\
+\mathbf{F}_{2,k}^{\mathbf{P}_{j}} \\
+\mathbf{F}_{3,k}^{\mathbf{P}_{j}}
+\end{bmatrix} \in \mathbb{R}^{3 \times 3}, \quad \mathbf{U} = [\mathbf{u}_1 \ \mathbf{u}_2 \ \mathbf{u}_3]$$`
+
+.f-90[
+  - `\(\mathbf{F}_{m,n}^{\mathbf{p}_j}\)`는 고유벡터들 사이의 coupling 합
+    - `\(m\neq n\)`인 경우, 서로 다른 eigendirection 사이의 coupling
+    - `\(m=n\)`인 경우, 자기자신의 변화는 고유벡터 변화에 영향 없음
+]
+
+`$$\mathbf{F}_{m,n}^{\mathbf{p}_j} = \begin{cases}
+\frac{(\mathbf{p}_j - \bar{\mathbf{p}})^T}{N(\lambda_n - \lambda_m)}(\mathbf{u}_m \mathbf{u}_n^T + \mathbf{u}_n \mathbf{u}_m^T), &amp; m \neq n \\
+\mathbf{0}_{1 \times 3}, &amp; m = n
+\end{cases}$$`
+
+???
+-$\mathbf{F}_{m,n}^{\mathbf{p}_j}$
+(pj-pbar)는 pj가 평균에서 얼마나 떨어졌는지
+(um um^T + un um^T)는 고유벡터 변화가 다른 고유벡터 방향으로 섞이는 회전
+N(lambda_n - lambda_m)는 고유값 차이로, 차이작 작으면 민감하게 / 차이가 크면 안정적
+---
+## BA Formulation
+.nt-02.f-75[
+  - voxel 하나의 egienvalue cost에 대한 2차식 근사
+`$$\lambda_k(\mathbf{p} + \boldsymbol{\delta p}) \approx \lambda_k(\mathbf{p}) + \mathbf{J}(\mathbf{p})\boldsymbol{\delta p} + \frac{1}{2}\boldsymbol{\delta p}^T \mathbf{H}(\mathbf{p})\boldsymbol{\delta p}$$`
+- scan에서 feature point가 global frame에서의 움직임
+`$$\mathbf{p}_i = \mathbf{R}_{s_i} \exp(\phi_{s_i}^\wedge) \mathbf{p}_{f_i} + \mathbf{t}_{s_i}; \frac{\delta \mathbf{p}_i}{\delta \mathbf{T}_{s_i}} = \left[ -\mathbf{R}_{s_i} (\mathbf{p}_{f_i})^\wedge \quad \mathbf{I} \right]$$`
+- voxel 하나의 egienvalue cost를 pose incremenst `\(\delta \mathbf{T}\)`에 대한 2차식으로 근사
+`$$\lambda_k(\mathbf{T} \boxplus \delta\mathbf{T}) \approx \lambda_k(\mathbf{T}) + \underbrace{\mathbf{JD}}_{\bar{\mathbf{J}}} \delta\mathbf{T} + \frac{1}{2} \delta\mathbf{T}^T \underbrace{\mathbf{D}^T \mathbf{HD}}_{\bar{\mathbf{H}}} \delta\mathbf{T}$$`
+- Levenberg-Marquardt 업데이트 공식
+`$$(\bar{\mathbf{H}}(T) + \mu \mathbf{I})\delta \mathbf{T}^* = -\bar{\mathbf{J}}(T)^T$$`
+]
+???
+첫번째식 : point 기준 2차 근사. voxel cost 람다를 point-space에서2차 근사
+두번째식 : point와 pose의 관계식. pose perturbation이 point를 어떻게 움직이는지
+세번째식 : 핵심. 실제 최적화 변수인 pose로 바꾼 결과.즉 pose기준 2차 근사. point-space quadratic을 pose-space quadratic으로 변경
+네번째식 : Levenberg-Marquardt 업데이트 공식
+---
+## Adaptive Voxelization
+.nt-02.pull-left[
+![:scale 100%](fig/BALM/fig4_voxelmap.png)
+]
+
+.pull-right-53.f-80[
+  - Rough pose를 이용해 multi-scan fature points를 정렬
+- 3D 공간을 voxel 단위로 분할
+  
+- 각 voxel 내부 점군의 covariance eigenvaluse로 planar/edge 구조 판별
+  
+- 하나의 feature로 보기 어려운 voxel은 세분화
+  
+- 각 voxel을 하나의 geometirc feature 및 cost item으로 활용  
+]
+???
+(a),(b)는 실제실험사진
+---
+## Adative Voxelization
+.nt-02.f-90[
+- **Remak1**
+  - voxel안 점이 너무 많으면 Hessian 차원이 커지므로, **같은 scan에서 온 점들을 평균화해도 된다**
+  - raw feature point가 정의한 same plane위에 있으면, 계산을 줄이면서 consistency는 유지함
+
+- **Remark2**
+  - Hessian은 `\(\lambda_i \neq \lambda_k\)`를 필요하므로 수치적으로 불안정한 voxel은 BA에서 제외
+
+- **Remak3**
+  - voxel을 세밀하게 만들고 **same plane** 검사 허용 오차를 기우면 curved surface같은 것도 대응 가능
+
+- **Remark4**
+  - recursive subdivision은 **max depth**와 **minimum number of points** 조건으로 멈춤
+]
+---
+## LOAM with Local BA
+.nt-02.pull-left-50[
+![:scale 100%](fig/BALM/fig5_overview.png)
+]
+.nt-07.pull-right-50.f-80[
+- **Feature Extratcion** 
+  - Raw point에서 edge/planar feature point 추출
+  
+- **Odometry (Rough Pose Estimation)**
+  - 새 scan을 기존 map 정합하여 rough pose 추정
+
+- **Adaptive Voxelization/Voxel Map Update**
+  - 정렬된 faeture point를 **edge/planar voxel map** 생성
+  - eigenvalue 기반 검사과 8-octant를 이용해 feature corresopondence 생성
+  
+- **Map Refinement (Local BA)**
+  - sliding window `\(\mathbf{P}_{sw}\)`안의 voxel들을 통해 eigenvalue기반 cost 생성
+  - pose-only BA로 pose 업데이트
+  
+- **Marginalization**
+  - 오래된 정보는 `\(\mathbf{P}_{fix}\)`로 요약된 형태로 보존  
+  ]
+???
+feature extraction으로 sparse feature를 만들고 → 
+odometry가 rough pose를 구해 새 scan을 voxel map에 넣고 → 
+adaptive voxelization이 correspondence를 만들고 → 
+map-refinement가 sliding window local BA로 pose를 다시 고치고 → 
+오래된 정보는 Pfix로 요약 보존하는 구조
+---
+## Experimental
+.nt-02.f-90[
+- **Use LiDAR Livox Horizon**]
+.nt-02.pull-left-50[
+![:scale 85%](fig/BALM/fig6_Horizon.png)
+]
+.nt-02.pull-right-50[
+  ![:scale 85%](fig/BALM/table1_Horizon_Terror.png)
+]
+---
+## Experimental
+.nt-02.f-90[
+  - **Use LiDAR Livox Mid40**]
+.center[
+![:scale 45%](fig/BALM/fig7_Mid40.png)
+]
+---
+## Experimental
+.nt-02.f-90[
+  - **Use LiDAR Velodyne VLP-16**]
+.nt-02.pull-left-50[
+![:scale 85%](fig/BALM/fig8_odometry_result.png)
+]
+.nt-02.pull-right-50[
+  ![:scale 100%](fig/BALM/table2_Velodyn_Terror.png)
+]
+---
+## Experimental
+.center[
+![:scale 70%](fig/BALM/fig9_map_alignment.png)
+]
+- BALM은 drift를 줄이고, 실행시간도 실용적임을 보여줌
+- local BA와 voxel update를 적용한 BALM이 대부분 빠르게 완료됨
+---
+## Conclusion
+.nt-02.f-90[
+- **Closed form feature elimination기반 LiDAR BA Formulation**
+  - planar/edge feature의 최적 파라미터를 closed-form으로 구해서 pose-only BA 문제로 변환
+  
+- **Gradient/Hessian 기반 second-order optimization**
+  - eigenvalue cost에 대한 gradient/hessian을 closed-form으로 유도
+  
+- **Adaptive Voxelization기반 효율적인 edge/planar correspondence**
+  - 같은 edge/planar에 속하는 feature points를 하나의 voxel로 묶어서 local BA에 활용
+]
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script src="Xaringan_Example/swan/macros.js"></script>
+<script>var slideshow = remark.create({
+  "ratio": "16:9",
+  "highlightStyle": "github",
+  "highlightLines": true,
+  "countIncrementalSlides": false,
+  "scale": true
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
