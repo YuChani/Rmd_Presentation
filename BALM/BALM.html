@@ -3,13 +3,13 @@
   <head>
     <title>BALM: Bundle Adjustment for Lidar Mapping</title>
     <meta charset="utf-8" />
-    <script src="libs/header-attrs-2.30/header-attrs.js"></script>
-    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
-    <link href="libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
-    <link rel="stylesheet" href="Xaringan_Example/swan/swan.css" type="text/css" />
-    <link rel="stylesheet" href="Xaringan_Example/swan/swan-fonts.css" type="text/css" />
-    <link rel="stylesheet" href="Xaringan_Example/swan/swan-all-fonts.css" type="text/css" />
-    <link rel="stylesheet" href="Xaringan_Example/swan/tachyons_ext.css" type="text/css" />
+    <script src="../libs/header-attrs-2.30/header-attrs.js"></script>
+    <link href="../libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="../libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+    <link rel="stylesheet" href="../Xaringan_Example/swan/swan.css" type="text/css" />
+    <link rel="stylesheet" href="../Xaringan_Example/swan/swan-fonts.css" type="text/css" />
+    <link rel="stylesheet" href="../Xaringan_Example/swan/swan-all-fonts.css" type="text/css" />
+    <link rel="stylesheet" href="../Xaringan_Example/swan/tachyons_ext.css" type="text/css" />
   </head>
   <body>
     <textarea id="source">
@@ -48,10 +48,10 @@ Department of Mechanical Engineering, The University of Hong Kong</p>
 ---
 ## Introduction
 .nt-02.pull-left[
-![:scale 100%](fig/BALM/fig1_BA_comparison.png)
+![:scale 100%](../fig/BALM/fig1_BA_comparison.png)
 ]
 .nt-02.pull-right[
-![:scale 100%](fig/BALM/fig3_feature.png)
+![:scale 100%](../fig/BALM/fig3_feature.png)
 ]
 .f-90[
 - **Visual BA** : 동일한 feature point에 대한 다중 관측 제약
@@ -227,7 +227,7 @@ N(lambda_n - lambda_m)는 고유값 차이로, 차이작 작으면 민감하게 
 ---
 ## Adaptive Voxelization
 .nt-02.pull-left[
-![:scale 100%](fig/BALM/fig4_voxelmap.png)
+![:scale 100%](../fig/BALM/fig4_voxelmap.png)
 ]
 
 .pull-right-53.f-80[
@@ -261,7 +261,7 @@ N(lambda_n - lambda_m)는 고유값 차이로, 차이작 작으면 민감하게 
 ---
 ## LOAM with Local BA
 .nt-02.pull-left-50[
-![:scale 100%](fig/BALM/fig5_overview.png)
+![:scale 100%](../fig/BALM/fig5_overview.png)
 ]
 .nt-07.pull-right-50.f-80[
 - **Feature Extratcion** 
@@ -292,32 +292,32 @@ map-refinement가 sliding window local BA로 pose를 다시 고치고 →
 .nt-02.f-90[
 - **Use LiDAR Livox Horizon**]
 .nt-02.pull-left-50[
-![:scale 85%](fig/BALM/fig6_Horizon.png)
+![:scale 85%](../fig/BALM/fig6_Horizon.png)
 ]
 .nt-02.pull-right-50[
-  ![:scale 85%](fig/BALM/table1_Horizon_Terror.png)
+  ![:scale 85%](../fig/BALM/table1_Horizon_Terror.png)
 ]
 ---
 ## Experimental
 .nt-02.f-90[
   - **Use LiDAR Livox Mid40**]
 .center[
-![:scale 45%](fig/BALM/fig7_Mid40.png)
+![:scale 45%](../fig/BALM/fig7_Mid40.png)
 ]
 ---
 ## Experimental
 .nt-02.f-90[
   - **Use LiDAR Velodyne VLP-16**]
 .nt-02.pull-left-50[
-![:scale 85%](fig/BALM/fig8_odometry_result.png)
+![:scale 85%](../fig/BALM/fig8_odometry_result.png)
 ]
 .nt-02.pull-right-50[
-  ![:scale 100%](fig/BALM/table2_Velodyn_Terror.png)
+  ![:scale 100%](../fig/BALM/table2_Velodyn_Terror.png)
 ]
 ---
 ## Experimental
 .center[
-![:scale 70%](fig/BALM/fig9_map_alignment.png)
+![:scale 70%](../fig/BALM/fig9_map_alignment.png)
 ]
 - BALM은 drift를 줄이고, 실행시간도 실용적임을 보여줌
 - local BA와 voxel update를 적용한 BALM이 대부분 빠르게 완료됨
@@ -336,7 +336,7 @@ map-refinement가 sliding window local BA로 pose를 다시 고치고 →
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
-<script src="Xaringan_Example/swan/macros.js"></script>
+<script src="../Xaringan_Example/swan/macros.js"></script>
 <script>var slideshow = remark.create({
   "ratio": "16:9",
   "highlightStyle": "github",
