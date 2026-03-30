@@ -9,20 +9,20 @@ date: 2026.03.25
 
 output:
   xaringan::moon_reader:
-    lib_dir: libs
+    lib_dir: ../libs
     css: 
       - "default"
       - "default-fonts"
-      - "Xaringan_Example/swan/swan.css"
-      - "Xaringan_Example/swan/swan-fonts.css"
-      - "Xaringan_Example/swan/swan-all-fonts.css"
-      - "Xaringan_Example/swan/tachyons_ext.css"
+      - "../Xaringan_Example/swan/swan.css"
+      - "../Xaringan_Example/swan/swan-fonts.css"
+      - "../Xaringan_Example/swan/swan-all-fonts.css"
+      - "../Xaringan_Example/swan/tachyons_ext.css"
     nature:
       ratio: "16:9"
       highlightStyle: "github"
       highlightLines: true
       countIncrementalSlides: false
-      beforeInit: ["Xaringan_Example/swan/macros.js"] 
+      beforeInit: ["../Xaringan_Example/swan/macros.js"] 
       scale: true
 
 ---
@@ -72,7 +72,7 @@ registration단위를 point residual에서 density discrepancy로 함
 ---
 ## L2 Distance(Robust + Closed form)
 .center[
-![:scale 80%](fig/GaussianMixture/fig2.png)
+![:scale 80%](../fig/GaussianMixture/fig2.png)
 ]
 - outlier / density 불균형 상황에서 L2와 Log-likelihood에서 더 안정적임
 ---
@@ -94,7 +94,7 @@ Gaussian product integral을 이용해 Gaussian mixture 사이의 L2 distance가
 ## Unified Interpretation
 .center[
 <div style="margin-top: 25px;">
-![:scale 80%](fig/GaussianMixture/fig3.png)
+![:scale 80%](../fig/GaussianMixture/fig3.png)
 </div>
 ]
 .f-90[
@@ -136,7 +136,7 @@ $$
 
 .pull-right[
 .center[
-![:scale 85%](fig/GaussianMixture/algorithm1.png)
+![:scale 85%](../fig/GaussianMixture/algorithm1.png)
 ]
 ]
 ---
