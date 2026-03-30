@@ -61,13 +61,13 @@ output:
 .nt-02.f-90[
 - **Feature extraction** : raw point에서 edge/planar feature point 추출
   
-- **Odometry** : 새로운 scan의 rough pose 구함(Local BA전 pose)
+- **Odometry** : 새로운 scan의 initail pose estimation 계산
   
-- **Global transform** : rough pose를 통해서 feature point을 Global frame으로 변환
+- **Global alignment** : odometry pose를 통해서 feature point을 global map frame으로 정렬
+  $$\mathbf{p}_i = R_{s_i} \mathbf{p}_{f_i} + \mathbf{t}_{s_i} ; i = 1, \ldots, N.$$
+- **Adaptive Voxelization** : edge/planar Voxel map에 feature point를 삽입하고 Adative subdivision 수행
   
-- **Adaptive Voxelization** : 각 Edge Voxel map/Planar Voxel map에 넣고 Adative Voxelization 수행
-  
-- **Local BA** : 각 Voxel의 mean/covariance를 통해 eigenvalue 기반 cost로 local BA 수행
+- **Local BA** : voxel의 mean/covariance를 통해 eigenvalue 기반 cost로 local BA 수행
   
 - **Update/Marginalize** : pose와 Voxel 업데이트, 오래된 점은 marginalize
 ]
