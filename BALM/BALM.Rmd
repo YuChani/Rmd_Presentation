@@ -9,20 +9,20 @@ date: 2026.03.30
 
 output:
   xaringan::moon_reader:
-    lib_dir: ../libs
+    lib_dir: libs
     css: 
       - "default"
       - "default-fonts"
-      - "../Xaringan_Example/swan/swan.css"
-      - "../Xaringan_Example/swan/swan-fonts.css"
-      - "../Xaringan_Example/swan/swan-all-fonts.css"
-      - "../Xaringan_Example/swan/tachyons_ext.css"
+      - "Xaringan_Example/swan/swan.css"
+      - "Xaringan_Example/swan/swan-fonts.css"
+      - "Xaringan_Example/swan/swan-all-fonts.css"
+      - "Xaringan_Example/swan/tachyons_ext.css"
     nature:
       ratio: "16:9"
       highlightStyle: "github"
       highlightLines: true
       countIncrementalSlides: false
-      beforeInit: ["../Xaringan_Example/swan/macros.js"] 
+      beforeInit: ["Xaringan_Example/swan/macros.js"] 
       scale: true
 
 
@@ -52,7 +52,7 @@ output:
   
 - **Sparse LiDAR**에선 point-to-point BA보다, point-to-plane/line BA 
   
-- **LiDAR BA in BALM** : faeture points가 동일한 planar/edge위 존재하도록 함
+- **LiDAR BA in BALM** : faeture points가 동일한 planar/edge위 존재하도록 함`
 ]
 ---
 ## BA Formulation
