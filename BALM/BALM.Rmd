@@ -13,16 +13,16 @@ output:
     css: 
       - "default"
       - "default-fonts"
-      - "Xaringan_Example/swan/swan.css"
-      - "Xaringan_Example/swan/swan-fonts.css"
-      - "Xaringan_Example/swan/swan-all-fonts.css"
-      - "Xaringan_Example/swan/tachyons_ext.css"
+      - "../Xaringan_Example/swan/swan.css"
+      - "../Xaringan_Example/swan/swan-fonts.css"
+      - "../Xaringan_Example/swan/swan-all-fonts.css"
+      - "../Xaringan_Example/swan/tachyons_ext.css"
     nature:
       ratio: "16:9"
       highlightStyle: "github"
       highlightLines: true
       countIncrementalSlides: false
-      beforeInit: ["Xaringan_Example/swan/macros.js"] 
+      beforeInit: ["../Xaringan_Example/swan/macros.js"] 
       scale: true
 
 
