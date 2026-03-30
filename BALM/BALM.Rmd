@@ -29,8 +29,6 @@ output:
 ---
 ## Index
   - Introduction
-  
-  - System Framework
 
   - BA Formulation
   
@@ -47,7 +45,7 @@ output:
 ![:scale 100%](fig/fig1_BA_comparison.png)
 ]
 .nt-02.pull-right[
-![:scale 100%](fig/fig3_feature.png)
+![:scale 100%](fig/fig2_LOAMvsBALM.png)
 ]
 .f-90[
 - **Visual BA** : 동일한 feature point에 대한 다중 관측 제약
@@ -57,20 +55,17 @@ output:
 - **Sparse LiDAR**에선 point-to-point BA보다, point-to-plane/line BA 적용
 ]
 ---
-## System Framework
-.nt-02.f-90[
-- **Feature extraction** : raw point에서 edge/planar feature point 추출
-  
-- **Odometry** : 새로운 scan의 initail pose estimation 계산
-  
-- **Global alignment** : odometry pose를 통해서 feature point을 global map frame으로 정렬
-  $$\mathbf{p}_i = R_{s_i} \mathbf{p}_{f_i} + \mathbf{t}_{s_i} ; i = 1, \ldots, N.$$
-- **Adaptive Voxelization** : edge/planar Voxel map에 feature point를 삽입하고 Adative subdivision 수행
-  
-- **Local BA** : voxel의 mean/covariance를 통해 eigenvalue 기반 cost로 local BA 수행
-  
-- **Update/Marginalize** : pose와 Voxel 업데이트, 오래된 점은 marginalize
+## BA Formulation
+.nt-02.center[
+![:scale 55%](fig/fig3_feature.png)
 ]
+.f-80[
+  - M개의 스캔으로부터 얻어졌지만 모두 같은 feature(planar/edge)에 해당되는 sparse feature points $p_{fi}$그룹
+    - $\mathbf{T}_j = (\mathbf{R}_j, \mathbf{t}_j) \in SO(3) \times \mathbb{R}^3$, $j=(1,...,M)$ 
+    - $p_i$: global frame의 feature point 
+]
+
+$$\mathbf{p}_i = R_{s_i} \mathbf{p}_{f_i} + \mathbf{t}_{s_i} ; i = 1, \ldots, N.$$
 ---
 ## BA Formulation
 .nt-02.f-90[
@@ -283,6 +278,22 @@ odometry가 rough pose를 구해 새 scan을 voxel map에 넣고 →
 adaptive voxelization이 correspondence를 만들고 → 
 map-refinement가 sliding window local BA로 pose를 다시 고치고 → 
 오래된 정보는 Pfix로 요약 보존하는 구조
+---
+## LOAM with Local BA
+.nt-02.f-90[
+- **Feature extraction** : raw point에서 edge/planar feature point 추출
+  
+- **Odometry** : 새로운 scan의 initail pose estimation
+  
+- **Global alignment** : odometry pose를 통해서 feature point을 global map frame으로 정렬
+  
+  $$\mathbf{p}_i = R_{s_i} \mathbf{p}_{f_i} + \mathbf{t}_{s_i} ; i = 1, \ldots, N.$$
+- **Adaptive Voxelization** : edge/planar Voxel map에 feature point를 삽입하고 Adative subdivision 수행
+  
+- **Local BA** : voxel의 mean/covariance를 통해 eigenvalue 기반 cost로 local BA 수행
+  
+- **Update** : pose와 Voxel 업데이트, 오래된 점은 marginalize
+]
 ---
 ## Experimental
 .nt-02.f-90[
