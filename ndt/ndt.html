@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>NDT</title>
+    <meta charset="utf-8" />
+    <script src="libs/header-attrs-2.30/header-attrs.js"></script>
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+    <link rel="stylesheet" href="../Xaringan_Example/swan/swan.css" type="text/css" />
+    <link rel="stylesheet" href="../Xaringan_Example/swan/swan-fonts.css" type="text/css" />
+    <link rel="stylesheet" href="../Xaringan_Example/swan/swan-all-fonts.css" type="text/css" />
+    <link rel="stylesheet" href="../Xaringan_Example/swan/tachyons_ext.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+.title[
+# NDT
+]
+.subtitle[
+## CVRL
+]
+.author[
+### <p>Yuchan KIM</p>
+]
+.date[
+### 2026.04.01
+]
+
+---
+
+## How to get mean and covariance?
+.nt-02.f-90[
+  - covariance_estimation.cpp]
+
+```cpp
+Vector4d sum_points = Vector4d::Zero();
+Matrix4d sum_covs   = Matrix4d::Zero();
+
+for (int j = 0; j &lt; num_found; j++) 
+{
+  const auto&amp; pt = points[k_indices[j]];
+  sum_points += pt;
+  sum_covs += pt * pt.transpose();
+}
+
+Eigen::Vector4d mean = sum_points / num_found;
+Eigen::Matrix4d cov = (sum_covs - mean * sum_points.transpose()) / num_found;
+```
+.f-90[  
+  - `sum_points` : `\(S_{\mu} = \sum_{j=1}^{k} p_j\)`, &amp;ensp; `sum_covs` : `\(S_{\Sigma} = \sum_{j=1}^{k} p_j p_j^T\)`
+- mean: `\(\mu_i = \frac{S_{\mu}}{k}\)`
+- 공분산 : `\(\Sigma_i = \frac{S_{\Sigma}}{k} - \mu_i \mu_i^T = \frac{S_{\Sigma} - \mu_i \cdot S_{\mu}^T}{k}\)`
+]
+---
+## How to get mean and covariance?
+.nt-02.f-90[
+  - covariance_estimation.cpp]
+
+```cpp
+case CovarianceEstimationParams::EIG: {
+  Eigen::SelfAdjointEigenSolver&lt;Eigen::Matrix3d&gt; eig;
+  eig.computeDirect(cov.block&lt;3, 3&gt;(0, 0));
+
+  covs[i].setZero();
+  covs[i].block&lt;3, 3&gt;(0, 0) = eig.eigenvectors()
+      * params.eigen_values.asDiagonal()
+      * eig.eigenvectors().inverse();
+}
+```
+
+.f-90[
+- `params.eigen_values`의 기본값은 `(1e-3, 1.0, 1.0)`
+$$
+\Sigma_i^{\text{EIG}} = V \, \mathrm{diag}(10^{-3},\; 1.0,\; 1.0) \, V^{-1}
+$$
+- **법선방향**은 `\(10^{-3}\)`로 작음, 나머지 두축은 분산이 1.0으로 평범
+- 각 포인트만의 `\(\Sigma_i\)`이 존재
+]
+---
+## How to get mean and covariance?
+.nt-02.f-90[
+  - gaussian_voxelmap_cpu.cpp]
+```cpp
+void GaussianVoxel::add(const Setting&amp; setting, const PointCloud&amp; points, size_t i) {
+  if (finalized) {
+    this-&gt;finalized  = false;
+    this-&gt;mean      *= num_points;   // 합산값으로 복원
+    this-&gt;cov       *= num_points;   // 합산값으로 복원
+  }
+  num_points++;
+  this-&gt;mean += points.points[i];   // 위치 누적
+  this-&gt;cov  += points.covs[i];     // 포인트별 공분산 누적
+}
+```
+---
+## How to get mean and covariance?
+.nt-02.f-90[
+  - gaussian_voxelmap_cpu.cpp]
+```cpp
+void GaussianVoxel::finalize() {
+  if (finalized) return;
+  mean /= num_points;   // 가평균
+  cov  /= num_points;   // 가분산
+  finalized = true;
+}
+```
+---
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script src="../Xaringan_Example/swan/macros.js"></script>
+<script>var slideshow = remark.create({
+  "ratio": "16:9",
+  "highlightStyle": "github",
+  "highlightLines": true,
+  "countIncrementalSlides": false,
+  "scale": true
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

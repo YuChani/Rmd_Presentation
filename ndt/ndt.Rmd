@@ -1,0 +1,105 @@
+---
+title: "NDT"
+subtitle: "CVRL"
+author: |
+  Yuchan KIM
+  
+date: 2026.04.01
+
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    css: 
+      - "default"
+      - "default-fonts"
+      - "../Xaringan_Example/swan/swan.css"
+      - "../Xaringan_Example/swan/swan-fonts.css"
+      - "../Xaringan_Example/swan/swan-all-fonts.css"
+      - "../Xaringan_Example/swan/tachyons_ext.css"
+    nature:
+      ratio: "16:9"
+      highlightStyle: "github"
+      highlightLines: true
+      countIncrementalSlides: false
+      beforeInit: ["../Xaringan_Example/swan/macros.js"] 
+      scale: true
+
+
+---
+## How to get mean and covariance?
+.nt-02.f-90[
+  - covariance_estimation.cpp]
+
+```cpp
+Vector4d sum_points = Vector4d::Zero();
+Matrix4d sum_covs   = Matrix4d::Zero();
+
+for (int j = 0; j < num_found; j++) 
+{
+  const auto& pt = points[k_indices[j]];
+  sum_points += pt;
+  sum_covs += pt * pt.transpose();
+}
+
+Eigen::Vector4d mean = sum_points / num_found;
+Eigen::Matrix4d cov = (sum_covs - mean * sum_points.transpose()) / num_found;
+```
+.f-90[  
+  - `sum_points` : $S_{\mu} = \sum_{j=1}^{k} p_j$, &ensp; `sum_covs` : $S_{\Sigma} = \sum_{j=1}^{k} p_j p_j^T$
+- mean: $\mu_i = \frac{S_{\mu}}{k}$
+- 공분산 : $\Sigma_i = \frac{S_{\Sigma}}{k} - \mu_i \mu_i^T = \frac{S_{\Sigma} - \mu_i \cdot S_{\mu}^T}{k}$
+]
+---
+## How to get mean and covariance?
+.nt-02.f-90[
+  - covariance_estimation.cpp]
+
+```cpp
+case CovarianceEstimationParams::EIG: {
+  Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> eig;
+  eig.computeDirect(cov.block<3, 3>(0, 0));
+
+  covs[i].setZero();
+  covs[i].block<3, 3>(0, 0) = eig.eigenvectors()
+      * params.eigen_values.asDiagonal()
+      * eig.eigenvectors().inverse();
+}
+```
+
+.f-90[
+- `params.eigen_values`의 기본값은 `(1e-3, 1.0, 1.0)`
+$$
+\Sigma_i^{\text{EIG}} = V \, \mathrm{diag}(10^{-3},\; 1.0,\; 1.0) \, V^{-1}
+$$
+- **법선방향**은 $10^{-3}$로 작음, 나머지 두축은 분산이 1.0으로 평범
+- 각 포인트만의 $\Sigma_i$이 존재
+]
+---
+## How to get mean and covariance?
+.nt-02.f-90[
+  - gaussian_voxelmap_cpu.cpp]
+```cpp
+void GaussianVoxel::add(const Setting& setting, const PointCloud& points, size_t i) {
+  if (finalized) {
+    this->finalized  = false;
+    this->mean      *= num_points;   // 합산값으로 복원
+    this->cov       *= num_points;   // 합산값으로 복원
+  }
+  num_points++;
+  this->mean += points.points[i];   // 위치 누적
+  this->cov  += points.covs[i];     // 포인트별 공분산 누적
+}
+```
+---
+## How to get mean and covariance?
+.nt-02.f-90[
+  - gaussian_voxelmap_cpu.cpp]
+```cpp
+void GaussianVoxel::finalize() {
+  if (finalized) return;
+  mean /= num_points;   // 가평균
+  cov  /= num_points;   // 가분산
+  finalized = true;
+}
+```
+---

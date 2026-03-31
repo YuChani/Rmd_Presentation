@@ -79,7 +79,7 @@ $$\begin{align*}
 (\mathbf{T}^*, \mathbf{n}^*, \mathbf{q}^*) &= \arg \min_{T,n,q} \frac{1}{N} \sum_{i=1}^N (\mathbf{n}^T (\mathbf{p}_i - \mathbf{q}))^2 \\
 &= \arg \min_{T} \left( \underbrace{\min_{n,q} \frac{1}{N} \sum_{i=1}^N (\mathbf{n}^T (\mathbf{p}_i - \mathbf{q}))^2}_{=\lambda_3(\mathbf{A}); \text{ if } \mathbf{n}^*=\mathbf{u}_3, \mathbf{q}^*=\bar{\mathbf{p}}} \right)
 \end{align*}$$
-]
+]****
 .f-90[
 - planar feature의 **최적 파라미터 (n,q)를 closed-form**으로 구해 **pose-only BA** 문제로 변환 
 ]
