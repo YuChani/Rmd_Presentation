@@ -129,9 +129,9 @@ void GaussianVoxel::finalize() {
   - covariance_estimation.cpp : 각 점 `\(p_i\)`에 대한 `\(\Sigma_i\)` 계산
 - gaussian_voxelmap_cpu.cpp : `\(\Sigma_i\)`들을 voxel안에서 평균을 통해 `\(\bar{\Sigma}_i\)` 계산
   - voxel내 포인트들의 **공간적 분포**가 아닌 포인트들의 **이웃 공분산의 평균**을 사용 그래서 **가분산**
-- 가평균 : voxel안의 들어온 점들의 평균
+- **가평균** : voxel안의 들어온 점들의 평균
 `$$\bar\mu = \frac{1}{N} \cdot \sum_{i=1}^{N} p_i$$`
-- 가분산 : voxel안의 들어온 점들의 공분산의 평균
+- **가분산** : voxel안의 들어온 점들의 공분산의 평균
 `$$\bar\Sigma = \frac{1}{N} \cdot \sum_{i=1}^{N} \Sigma_i$$`
 ]
   
