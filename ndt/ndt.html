@@ -50,8 +50,8 @@ Eigen::Matrix4d cov = (sum_covs - mean * sum_points.transpose()) / num_found;
 ```
 .f-90[  
   - `sum_points` : `\(S_{\mu} = \sum_{j=1}^{k} p_j\)`, &amp;ensp; `sum_covs` : `\(S_{\Sigma} = \sum_{j=1}^{k} p_j p_j^T\)`
-- mean: `\(\mu_i = \frac{S_{\mu}}{k}\)`
-- 공분산 : `\(\Sigma_i = \frac{S_{\Sigma}}{k} - \mu_i \mu_i^T = \frac{S_{\Sigma} - \mu_i \cdot S_{\mu}^T}{k}\)`
+- mean: `\(\mu_i = \frac{S_{\mu}}{k}\)`, `\(p_i\)` 주변 이웃점들의 local mean을 의미
+- 공분산 : `\(\Sigma_i = \frac{S_{\Sigma}}{k} - \mu_i \mu_i^T = \frac{S_{\Sigma} - \mu_i \cdot S_{\mu}^T}{k}\)`, 기준점 `\(p_i\)` 주변 k개 이웃점들의 local covariance 의미
 ]
 ---
 ## How to get mean and covariance?
@@ -82,6 +82,7 @@ $$
 ## How to get mean and covariance?
 .nt-02.f-90[
   - gaussian_voxelmap_cpu.cpp]
+  
 ```cpp
 void GaussianVoxel::add(const Setting&amp; setting, const PointCloud&amp; points, size_t i) {
   if (finalized) {
@@ -94,10 +95,18 @@ void GaussianVoxel::add(const Setting&amp; setting, const PointCloud&amp; points
   this-&gt;cov  += points.covs[i];     // 포인트별 공분산 누적
 }
 ```
+.f-90[
+  - mean은 finalize전 좌표들의 합으로, `\(\mu_{sum} = \sum_{i=1}^{N} p_i,\)` 
+- cov은 finalize전이면 point들의 공분산들의 합, `\(\Sigma_{sum} = \sum_{i=1}^{N} \Sigma_i\)`
+- finalize가 true 경우, **mean과 cov는 이미 N으로 나눠진 평균값이므로 다시 합산값**으로 복원
+  - `\(\bar\mu = \frac{1}{N} \cdot \sum_{i=1}^{N} p_i\)`, &amp;ensp; `\(\bar\Sigma = \frac{1}{N} \cdot \sum_{i=1}^{N} \Sigma_i\)`
+
+]
 ---
 ## How to get mean and covariance?
 .nt-02.f-90[
   - gaussian_voxelmap_cpu.cpp]
+  
 ```cpp
 void GaussianVoxel::finalize() {
   if (finalized) return;
@@ -106,7 +115,26 @@ void GaussianVoxel::finalize() {
   finalized = true;
 }
 ```
+
+.f-90[
+  - finalize() 호출 시, 합산된 mean과 cov를 N으로 나눠서 평균값으로 변환
+-  `\(\bar\mu = \frac{1}{N} \cdot \sum_{i=1}^{N} p_i\)` , **가평균**
+-  `\(\bar\Sigma = \frac{1}{N} \cdot \sum_{i=1}^{N} \Sigma_i\)`, **가분산**
+-  여기서의 cov는 `\(\frac{1}{N}\Sigma(p_i-\bar\mu)(p_i-\bar\mu)^T\)`가 아닌, voxel안의 점들의 분산의 평균을 의미하므로 가분산이라함.
+]
+
 ---
+## How to get mean and covariance?
+.nt-02.f-90[
+  - covariance_estimation.cpp : 각 점 `\(p_i\)`에 대한 `\(\Sigma_i\)` 계산
+- gaussian_voxelmap_cpu.cpp : `\(\Sigma_i\)`들을 voxel안에서 평균을 통해 `\(\bar{\Sigma}_i\)` 계산
+  - voxel내 포인트들의 **공간적 분포**가 아닌 포인트들의 **이웃 공분산의 평균**을 사용 그래서 **가분산**
+- 가평균 : voxel안의 들어온 점들의 평균
+`$$\bar\mu = \frac{1}{N} \cdot \sum_{i=1}^{N} p_i$$`
+- 가분산 : voxel안의 들어온 점들의 공분산의 평균
+`$$\bar\Sigma = \frac{1}{N} \cdot \sum_{i=1}^{N} \Sigma_i$$`
+]
+  
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
