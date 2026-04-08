@@ -141,7 +141,7 @@ $$
 $$
 \frac{\partial^2 \lambda_k}{\partial \mathbf{p}_j \partial \mathbf{p}_i}
 =
-`\begin{cases}
+\begin{cases}
 \frac{2}{N}
 \left(
 \frac{N-1}{N}\mathbf{u}_k \mathbf{u}_k^T
@@ -160,7 +160,7 @@ $$
 \mathbf{UF}_k^{p_j}\mathbf{u}_k^T(\mathbf{p}_i-\bar{\mathbf{p}})
 \right),
 &amp; i\neq j.
-\end{cases}`
+\end{cases}
 $$
 ???
 Gradient수식은 점 pi가 uk방향으로 평균에서 벗어나 있을수록 그 점은 `\(lambda_k\)`에 더 큰 영향을 미친다는 것을 보여줌
@@ -378,11 +378,11 @@ $$
 \Lambda = \mathbf{U}^{\top} \mathbf{A} \mathbf{U}
 \qquad
 \Lambda =
-`\begin{bmatrix}
+\begin{bmatrix}
 \lambda_1 &amp; 0 &amp; 0 \\
 0 &amp; \lambda_2 &amp; 0 \\
 0 &amp; 0 &amp; \lambda_3
-\end{bmatrix}`
+\end{bmatrix}
 $$
 ]
 
@@ -404,7 +404,7 @@ $$
 .nt-02.f-90[
   - `\(\Lambda=\mathbf{U}^{\top} \mathbf{A} \mathbf{U}\)`를 `\(p\)`에 대한 미분
 $$
-\frac{\partial \Lambda}{\partial p} = \left(\frac{\partial \mathbf{U}}{\partial p}\right)^T \mathbf{A} \mathbf{U} + \mathbf{U}^T \frac{\partial \mathbf{A}}{\partial p} \mathbf{U} + \mathbf{U}^T \mathbf{A} \frac{\partial \mathbf{U}}{\partial p}
+\frac{\partial \Lambda}{\partial p} = \left(\frac{\partial \mathbf{U}}{\partial p}\right)^T \mathbf{A} \mathbf{U} + \mathbf{U}^T \frac{\partial \mathbf{A}}{\partial p} \mathbf{U} + \mathbf{U}^T \mathbf{A} \frac{\partial \mathbf{U}}{\partial p} \tag{18}
 $$
 - `\(\mathbf{AU}=\mathbf{U}\Lambda, \mathbf{U^{\top}A}=\Lambda \mathbf{U}^\top\)`를 통해 정리 가능
 - 첫번째항 : `\(\left(\frac{\partial \mathbf{U}}{\partial p}\right)^T \mathbf{A} \mathbf{U} = \left(\frac{\partial \mathbf{U}}{\partial p}\right)^T \mathbf{U} \Lambda\)` / 세번째항 : `\(\mathbf{U}^T \mathbf{A} \frac{\partial \mathbf{U}}{\partial p} = \Lambda \mathbf{U}^T \frac{\partial \mathbf{U}}{\partial p}\)`
@@ -484,6 +484,91 @@ I - \frac{1}{N}I, &amp; i = j \\
 &amp;= \frac{2}{N} (\mathbf{p}_i - \bar{\mathbf{p}})^\top \mathbf{u}_k \mathbf{u}_k^\top.
 \end{align*}$$`
 - `\(\mathbf{A}\)`를 점들로 전개후, 평균 `\(\bar{\mathbf{p}}\)`가 `\(\mathbf{p}_i\)`에도 의존하기 때문에 `\(i=j\)`인 경우와 `\(i \neq j\)`인 경우로 나눠서 미분하면 `\(\sum_{j=1}^{N} (\mathbf{p}_j - \bar{\mathbf{p}}) = 0\)`을 이용해 유도 가능
+]
+---
+## Appendix (Proof Theorem2)
+.nt-02.f-90[
+  - 2차 미분(Hessian)
+`$$\frac{\partial^2 \lambda_k}{\partial p_j \partial p_i} \tag{7}$$`
+- 두 점 `\(\mathbf{p}_i=[x_i, y_i, z_i]^\top\)`와 `\(\mathbf{p}_j=[x_j, y_j, z_j]^\top\)`가 있고, `\(\mathbf{p}_j\)`의 한 좌표를 `\(\mathbf{q}\)`라고 함
+- eigenvector matrix `\(\mathbf{U}\)`는 Orthogonal하므로
+`$$\mathbf{U}^\top \frac{\partial \mathbf{U}}{\partial \mathbf{q}} + \left( \frac{\partial \mathbf{U}}{\partial \mathbf{q}} \right)^\top \mathbf{U} = 0$$`
+- Theorem1에서 `\(\mathbf{C}^p = \Lambda \mathbf{U}^\top \frac{\partial \mathbf{U}}{\partial p}\)`가 skew-symmetric matrix이므로
+`$$\mathbf{C}^q = \mathbf{U}^\top \frac{\partial \mathbf{U}}{\partial \mathbf{q}}, \mathbf{C}^q+(\mathbf{C}^q)^\top = 0$$`
+]
+---
+## Appendix (Proof Theorem2)
+.nt-02.f-90[
+  - `\(\mathbf{C}^q\)`는 변수q가 바뀔 때 eigenvector matrix `\(\mathbf{U}\)`의 변화율을 eigenbasis안에서 표현한 것, 또한 skew-symmetric matrix이므로 `\(\mathbf{C}^q\)`의 대각성분은 0이고, 비대각성분은 서로 부호가 반대인 형태
+- (18)번 수식의 q버전으로
+`$$\frac{\partial \Lambda}{\partial \mathbf{q}} = \mathbf{U}^\top \frac{\partial \mathbf{A}}{\partial \mathbf{q}} \mathbf{U} + \Lambda \mathbf{C}^q + (\mathbf{C}^q)^\top \Lambda = \mathbf{U}^\top \frac{\partial \mathbf{A}}{\partial \mathbf{q}} \mathbf{U} \tag{20}$$`
+- `\(\Lambda\)`는 diagonal matrix이고, `\(\frac{\partial \Lambda}{\partial \mathbf{q}}\)`의 또한 diagonal matrix으로 **off-diagonal**은 0이다.
+- off-diagonal성분에 대해서, (m- row성분 / n-column성분)
+`$$0 = \mathbf{u}_m^T \frac{\partial A}{\partial q} \mathbf{u}_n + \lambda_m C^q_{m,n} - C^q_{m,n} \lambda_n \tag{b}$$`
+- Theorem1에서는 **점 자체와 평균점이 움직이면서 생기는 직접적인 변화**, 
+- Theorem2에서는 **고유벡터 `\(\mathbf{u}_k\)`자체가 회전하면서 생기는 간접적인 영향**을 다루고 있음
+]
+---
+## Appendix (Proof Theorem2)
+.nt-02.f-90[
+  - (b)수식에서 `\(\lambda_m \neq \lambda_n\)`인(`\(m \neq n\)`) 경우, 서로 다른 eigendirection 사이의 coupling이 존재하므로
+`$$\mathbf{C}^q_{m,n} = \frac{1}{\lambda_n - \lambda_m}\mathbf{u}_m^T \frac{\partial A}{\partial q} \mathbf{u}_n \tag{21}$$`
+- (b)수식에서 `\(\lambda_m = \lambda_n\)`인(`\(m = n\)`) 경우, 자기자신의 변화는 고유벡터 변화에 영향이 없으므로
+`$$\mathbf{C}^q_{m,n} = 0$$`
+- `\(\mathbf{C}^q_{m,n}\)`는 skew-symmetric이므로 diagonal 성분은 모두 0이고, off-diagonal성분은 서로 부호가 반대인 형태
+- `\(m=n\)`인 경우는 자기 자신방향으로, 크기가 늘어나거나 줄어드는것이 아님. 따라서 **다른 eigenvector 방향의 영향만 나타냄**
+- `\(m \neq n\)`인 경우 즉, 점 `\(p_j\)`를 조금 바꾸면 `\(u_n\)`은 자기 자신 방향으로 변하는것이 아닌 다른 **eigenvector 방향으로 회전하듯이 변함**
+]
+---
+## Appendix (Proof Theorem2)
+.nt-02.f-90[
+  - `\(\mathbf{C}^q_{m,n}\)`에 정의에 따르면, 
+`$$\frac{\partial \mathbf{u}_k}{\partial q} = \frac{\partial \mathbf{U} \mathbf{e}_k}{\partial q} = \mathbf{U} \mathbf{C}^q \mathbf{e}_k \tag{c}$$`
+- `\(e_k\)`는 standard basis vector로, `\(k\)`번째 성분이 1이고 나머지는 0인 벡터
+`$$\frac{\partial (\mathbf{U}e_k)}{\partial q} = \frac{\partial\mathbf{U}}{\partial q} e_k$$`
+`$$\mathbf{C}^q=\mathbf{U}^\top \frac{\partial \mathbf{U}}{\partial q} \rightarrow \frac{\partial \mathbf{U}}{\partial q} = \mathbf{U} \mathbf{C}^q$$`
+- 따라서 (c)가 유도됨
+]
+---
+## Appendix (Proof Theorem2)
+.nt-02.f-90[
+  - `\(\frac {\partial \mathbf{u}_k}{\partial q}\)`는 `\(u_k\)`를 `\(p_j\)`의 모든 원소에 대한 미분을 벡터로 표현하면
+`$$\mathbf{p}_j=[x_j, y_j, z_j]^\top 
+\rightarrow 
+\frac{\partial \mathbf{u}_k}{\partial \mathbf{p}_j} = \left[ \frac{\partial {\mathbf{U}e_k}}{\partial x_j}, \frac{\partial {\mathbf{U}e_k}}{\partial y_j}, 
+\frac{\partial {\mathbf{U}e_k}}{\partial z_j} \right]^\top
+= \left[ \frac{\partial \mathbf{u}_k}{\partial x_j}, 
+\frac{\partial \mathbf{u}_k}{\partial y_j}, 
+\frac{\partial \mathbf{u}_k}{\partial z_j} \right]^\top$$`
+- 즉, `\(\mathbf{u}_k\)`가 point `\(\mathbf{p}_j\)`의 각 좌표 변화에 대해 어떻게 변하는지를 나타내는 벡터
+
+`$$\begin{align*}
+\frac{\partial \mathbf{u}_k}{\partial \mathbf{p}_j} &amp;= \left[ \frac{\partial U \mathbf{e}_k}{\partial x_j} \quad \frac{\partial U \mathbf{e}_k}{\partial y_j} \quad \frac{\partial U \mathbf{e}_k}{\partial z_j} \right] \\
+&amp;= \left[ UC^{x_j} \mathbf{e}_k \quad UC^{y_j} \mathbf{e}_k \quad UC^{z_j} \mathbf{e}_k \right] \\
+&amp;= U \left[ C^{x_j} \mathbf{e}_k \quad C^{y_j} \mathbf{e}_k \quad C^{z_j} \mathbf{e}_k \right] \\
+&amp;= U \begin{bmatrix}
+C^{x_j}_{1,k} &amp; C^{y_j}_{1,k} &amp; C^{z_j}_{1,k} \\
+C^{x_j}_{2,k} &amp; C^{y_j}_{2,k} &amp; C^{z_j}_{2,k} \\
+C^{x_j}_{3,k} &amp; C^{y_j}_{3,k} &amp; C^{z_j}_{3,k}
+\end{bmatrix}
+\end{align*}$$`
+]
+---
+## Appendix (Proof Theorem2)
+.nt-02.f-90[
+  - (21)번 수식과 같이 각 element `\(\mathbf{C}_{m,n}^q\)` 정의수식이고 `\(\mathbf{q} = [x_j, y_j, z_j]^\top\)`를 모으면
+`$$\mathbf{F}_{m,n}^{\mathbf{p}_j} = \left[ \mathbf{C}_{m,n}^{x_j} \quad \mathbf{C}_{m,n}^{y_j} \quad \mathbf{C}_{m,n}^{z_j} \right]$$`
+- `\(m \neq n\)` 인 경우
+`$$\mathbf{F}_{m,n}^{\mathbf{p}_j} = 
+\frac{1}{\lambda_n - \lambda_m} \left[ \mathbf{u}_m^T \frac{\partial \mathbf{A}}{\partial x_j} \mathbf{u}_n 
+\quad \mathbf{u}_m^T \frac{\partial \mathbf{A}}{\partial y_j} \mathbf{u}_n 
+\quad \mathbf{u}_m^T \frac{\partial \mathbf{A}}{\partial z_j} \mathbf{u}_n \right]$$`
+- `\(m = n\)` 인 경우며느 `\(\mathbf{C}_{m,n}^q\)`의 정의에 따라 0이므로, `\(\mathbf{F}_{m,n}^{\mathbf{p}_j} = \mathbf{0}_{1 \times 3}\)`이다.
+- 이를 벡터 형태로 표현하면
+`$$\mathbf{F}_{m,n}^{\mathbf{P}_j} = \begin{cases}
+\dfrac{1}{\lambda_n - \lambda_m} \dfrac{\partial \mathbf{u}_m^T \mathbf{A} \mathbf{u}_n}{\partial \mathbf{p}_j}, &amp; m \neq n \\
+0, &amp; m = n
+\end{cases}$$`
 ]
 ---
 ## Appendix (Proof Theorem2)
