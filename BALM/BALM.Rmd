@@ -79,7 +79,7 @@ $$\begin{align*}
 (\mathbf{T}^*, \mathbf{n}^*, \mathbf{q}^*) &= \arg \min_{T,n,q} \frac{1}{N} \sum_{i=1}^N (\mathbf{n}^T (\mathbf{p}_i - \mathbf{q}))^2 \\
 &= \arg \min_{T} \left( \underbrace{\min_{n,q} \frac{1}{N} \sum_{i=1}^N (\mathbf{n}^T (\mathbf{p}_i - \mathbf{q}))^2}_{=\lambda_3(\mathbf{A}); \text{ if } \mathbf{n}^*=\mathbf{u}_3, \mathbf{q}^*=\bar{\mathbf{p}}} \right)
 \end{align*}$$
-]****
+]
 .f-90[
 - planar feature의 **최적 파라미터 (n,q)를 closed-form**으로 구해 **pose-only BA** 문제로 변환 
 ]
@@ -340,3 +340,146 @@ map-refinement가 sliding window local BA로 pose를 다시 고치고 →
 - **Adaptive Voxelization기반 효율적인 edge/planar correspondence**
   - 같은 edge/planar에 속하는 feature points를 하나의 voxel로 묶어서 local BA에 활용
 ]
+---
+## Appendix
+.nt-02.pull-left-45[
+![:scale 70%](fig/vec_projection.png)
+]
+.nt-02.f-90[
+  - Projection
+]
+.nt-02.pull-right-55.f-90[
+  - Projection Vector
+  - 크기 :  
+$$\mathbf{a} \cdot \mathbf{b} = \|\mathbf{a}\|\|\mathbf{b}\|\cos\theta = (\|\mathbf{a}\|\cos\theta)\|\mathbf{b}\|$$
+$$\frac{\mathbf{a} \cdot \mathbf{b}}{\|\mathbf{b}\|} = \|\mathbf{a}\|\cos\theta = \|\mathbf{a}_{\parallel}\|$$
+
+  - 방향 : $\hat{\mathbf{b}} = \frac{\mathbf{b}}{\|\mathbf{b}\|}$
+  - 방향 x 크기
+$$\therefore \mathbf{a}_{\parallel} = \|\mathbf{a}_{\parallel}\| \cdot \hat{\mathbf{a}}_{\parallel} = \frac{\mathbf{a} \cdot \mathbf{b}}{\|\mathbf{b}\|} \cdot \frac{\mathbf{b}}{\|\mathbf{b}\|} = \frac{(\mathbf{b}\mathbf{b}^T)}{\mathbf{b}^T\mathbf{b}}\mathbf{a}$$
+]
+---
+## Appendix (Proof Theorem1)
+.nt-02.f-90[
+  - 1차 미분(gradient)
+  - planar cost : $\lambda_3(\mathbf{A})$ / edge cost : $\lambda_2(\mathbf{A}) + \lambda_3(\mathbf{A})$
+- 점 $p_i$를 움직였을때 $\mathbf{A}$의 k번째 eigenvalue $\lambda_k$가 얼마나 변하는가? 를 의미함
+$$
+\frac{\partial \lambda_k}{\partial \mathbf{p}_i}
+= \frac{2}{N} (\mathbf{p}_i - \bar{\mathbf{p}})^T \mathbf{u}_k \mathbf{u}_k^T  \tag{6}
+$$
+- $\mathbf{p}_i=[x_i, y_i, z_i]^T$이고, eigenvector matrix $\mathbf{U}=[\mathbf{u}_1, \mathbf{u}_2, \mathbf{u}_3]^T$ 로 정의시 
+
+$$
+\Lambda = \mathbf{U}^{\top} \mathbf{A} \mathbf{U}
+\qquad
+\Lambda =
+\begin{bmatrix}
+\lambda_1 & 0 & 0 \\
+0 & \lambda_2 & 0 \\
+0 & 0 & \lambda_3
+\end{bmatrix}
+$$
+]
+
+=> $\mathbf{A}$는 eigenvector basis에서 대각화된 형태로 표현됨
+---
+## Appendix (Proof Theorem1)
+.nt-02.f-90[
+  - 왜 $\Lambda = \mathbf{U}^{\top} \mathbf{A} \mathbf{U}$인가?
+  - covariance matrix $\mathbf{A} = \frac{1}{N} \sum_{i=1}^{N} (\mathbf{p}_i - \bar{\mathbf{p}})(\mathbf{p}_i - \bar{\mathbf{p}})^\top$
+  - $\mathbf{A}^\top = \mathbf{A}$이므로 대칭행렬 : $((\mathbf{p}_i - \bar{\mathbf{p}})(\mathbf{p}_i - \bar{\mathbf{p}})^\top)^\top = (\mathbf{p}_i - \bar{\mathbf{p}})(\mathbf{p}_i - \bar{\mathbf{p}})^\top$
+- $\mathbf{U} = [\mathbf{u}_1 \ \mathbf{u}_2 \ \mathbf{u}_3], \qquad \Lambda = \begin{bmatrix} \lambda_1 & 0 & 0 \\ 0 & \lambda_2 & 0 \\ 0 & 0 & \lambda_3 \end{bmatrix}$
+- $\mathbf{A}\mathbf{u}_k = \lambda_k \mathbf{u}_k ... (k=1,2,3)$들을 $\mathbf{AU} = \mathbf{U}\Lambda$라고 표현할 수 있음
+- $\mathbf{AU}=[\mathbf{A}\mathbf{u}_1 \ \mathbf{A}\mathbf{u}_2 \ \mathbf{A}\mathbf{u}_3] = [\lambda_1 \mathbf{u}_1 \ \lambda_2 \mathbf{u}_2 \ \lambda_3 \mathbf{u}_3]$
+- $\mathbf{U}\Lambda = [\,\mathbf{u}_1\ \mathbf{u}_2\ \mathbf{u}_3\,] \begin{bmatrix} \lambda_1 & 0 & 0 \\ 0 & \lambda_2 & 0 \\ 0 & 0 & \lambda_3 \end{bmatrix} = [\,\lambda_1 \mathbf{u}_1\ \lambda_2 \mathbf{u}_2\ \lambda_3 \mathbf{u}_3\,]$
+- $\mathbf{AU} = \mathbf{U}\Lambda$이므로 양변에 $\mathbf{U}^T$를 곱하면 $\Lambda = \mathbf{U}^T \mathbf{A} \mathbf{U}$
+]
+---
+## Appendix (Proof Theorem1)
+.nt-02.f-90[
+  - $\Lambda=\mathbf{U}^{\top} \mathbf{A} \mathbf{U}$를 $p$에 대한 미분
+$$
+\frac{\partial \Lambda}{\partial p} = \left(\frac{\partial \mathbf{U}}{\partial p}\right)^T \mathbf{A} \mathbf{U} + \mathbf{U}^T \frac{\partial \mathbf{A}}{\partial p} \mathbf{U} + \mathbf{U}^T \mathbf{A} \frac{\partial \mathbf{U}}{\partial p}
+$$
+- $\mathbf{AU}=\mathbf{U}\Lambda, \mathbf{U^{\top}A}=\Lambda \mathbf{U}^\top$를 통해 정리 가능
+- 첫번째항 : $\left(\frac{\partial \mathbf{U}}{\partial p}\right)^T \mathbf{A} \mathbf{U} = \left(\frac{\partial \mathbf{U}}{\partial p}\right)^T \mathbf{U} \Lambda$ / 세번째항 : $\mathbf{U}^T \mathbf{A} \frac{\partial \mathbf{U}}{\partial p} = \Lambda \mathbf{U}^T \frac{\partial \mathbf{U}}{\partial p}$
+]
+
+$$\frac{\partial \Lambda}{\partial p} = \mathbf{U}^T \frac{\partial \mathbf{A}}{\partial p} \mathbf{U} + 
+\underbrace{\Lambda \mathbf{U}^T \frac{\partial \mathbf{U}}{\partial p}}_{\text{C}^p} + 
+\underbrace{\left(\frac{\partial \mathbf{U}}{\partial p}\right)^T \mathbf{U} \Lambda}_{\text{(C}^p\text{)}^T}$$
+
+.f-90[
+- $\mathbf{C}^p = \Lambda \mathbf{U}^T \frac{\partial \mathbf{U}}{\partial p}$ / ${\mathbf{C}^p}^T = \left(\frac{\partial \mathbf{U}}{\partial p}\right)^T \mathbf{U} \Lambda$
+- $\mathbf{C}^p$의 역할은 eigenvector matrix $\mathbf{U}$의 변화율, eigenbasis안에서 표현함
+]
+---
+## Appendix (Proof Theorem1)
+.nt-02.f-90[
+  - $\mathbf{U}$의 각 열이 단위벡터로 Orthogonal이므로 $\mathbf{U}^T \mathbf{U} = \mathbf{I}$를 $\mathbf{p}$에 대해 미분
+$$\frac{\partial U^T}{\partial p}\mathbf{U} + \mathbf{U}^T \frac{\partial U}{\partial p} = 0$$
+$$(\mathbf{C}^p)^T + \mathbf{C}^p = 0 \rightarrow (\mathbf{C}^p)^T = -\mathbf{C}^p$$
+- 따라서 $\mathbf{C}^p$는 skew-symmetric matrix임
+$$
+\frac{\partial \Lambda}{\partial p} = \mathbf{U}^T \frac{\partial \mathbf{A}}{\partial p} \mathbf{U} + \color{red}{\Lambda\mathbf{C}^p} + \color{red}{(\mathbf{C}^p)^T\Lambda} = \mathbf{U}^T \frac{\partial \mathbf{A}}{\partial p} \mathbf{U}
+$$
+$$
+\frac{\partial \lambda_k}{\partial p} = \mathbf{u}_k^T \frac{\partial \mathbf{A}}{\partial p} \mathbf{u}_k = \frac{\partial (\mathbf{u}_k^T \mathbf{A} \mathbf{u}_k)}{\partial p} \quad (k = 1, 2, 3) \tag{a}
+$$
+- 따라서 대각성분만 보면 eigenvector derivate를 직접 계산을 할 필요가 없어짐
+]
+
+---
+## Appendix (Proof Theorem1)
+.nt-02.f-90[
+  - $\mathbf{A} = \frac{1}{N} \sum_{i=1}^{N} (\mathbf{p}_i - \bar{\mathbf{p}})(\mathbf{p}_i - \bar{\mathbf{p}})^\top$를 (a)에 대입하고 $\mathbf{p}_i = [x_i, y_i, z_i]^\top$에 대한 편미분
+$$\frac{\partial \lambda_k}{\partial \mathbf{p}_i} = 
+\begin{bmatrix} \frac{\partial \mathbf{u}_k^\top \mathbf{A} \mathbf{u}_k}{\partial x_i} & \frac{\partial \mathbf{u}_k^\top \mathbf{A} \mathbf{u}_k}{\partial y_i} & \frac{\partial \mathbf{u}_k^\top \mathbf{A} \mathbf{u}_k}{\partial z_i} \end{bmatrix} = 
+\frac{\partial \mathbf{u}_k^\top \mathbf{A} \mathbf{u}_k}{\partial \mathbf{p}_i}$$
+- 대입하고 $\mathbf{p}_i$에 대해 미분
+$$\begin{aligned}
+\frac{\partial \lambda_k}{\partial \mathbf{p}_i}
+&=
+\frac{\partial \mathbf{u}_k^{\top}\mathbf{A}\mathbf{u}_k}{\partial \mathbf{p}_i} \\
+&=
+\frac{1}{N}\sum_{j=1}^{N}
+\frac{\partial \mathbf{u}_k^{\top}(\mathbf{p}_j-\bar{\mathbf{p}})(\mathbf{p}_j-\bar{\mathbf{p}})^{\top}\mathbf{u}_k}
+{\partial \mathbf{p}_i} \\
+&=
+\frac{2}{N}\sum_{j=1}^{N}
+(\mathbf{p}_j-\bar{\mathbf{p}})^{\top}\mathbf{u}_k\,
+\frac{\partial\left(\mathbf{u}_k^{\top}(\mathbf{p}_j-\bar{\mathbf{p}})\right)}
+{\partial \mathbf{p}_i}
+\end{aligned}$$
+]
+---
+## Appendix (Proof Theorem1)
+.nt-02.f-90[
+- i=j면 $\mathbf{p}_i$를 $\mathbf{p}_i$로 미분하니까 $\mathbf{I}$, i=/j면 $\mathbf{p}_i$를 $\mathbf{p}_j$로 미분하니까 0
+$$\frac{\partial \mathbf{p}_j}{\partial \mathbf{p}_i} = \mathbf{I}, (i = j) 
+\qquad \frac{\partial \mathbf{p}_j}{\partial \mathbf{p}_i} = 0, (i \neq j),$$
+  - i : 미분하려는 point index / j : covariance 합을 도는 index
+- $\bar{\mathbf{p}} = \frac{1}{N} \sum_{i=1}^{N} \mathbf{p}_i$에 대해 미분
+$$\frac{\partial \bar{\mathbf{p}}}{\partial \mathbf{p}_i} = \frac{1}{N} \mathbf{I}$$
+$$\frac{\partial(p_j - \bar{p})}{\partial p_i} = 
+\begin{cases} 
+I - \frac{1}{N}I, & i = j \\ 
+-\frac{1}{N}I, & i \neq j 
+\end{cases}$$
+- 즉, 자기자신도 변하고, 평균도 같이 변한다는 것을 보여줌
+]
+---
+## Appendix (Proof Theorem1)
+.nt-02.f-90[
+  - $\mathbf{p}_i$에 대한 편미분을 대입해서 정리
+$$\begin{align*}
+\frac{\partial \lambda_k}{\partial \mathbf{p}_i} &= \frac{1}{N} \sum_{j=1}^{N} \frac{\partial}{\partial \mathbf{p}_i} \left( \mathbf{u}_k^\top (\mathbf{p}_j - \bar{\mathbf{p}})(\mathbf{p}_j - \bar{\mathbf{p}})^\top \mathbf{u}_k \right) \\[1ex]
+&= \frac{2}{N} \sum_{j=1}^{N} (\mathbf{p}_j - \bar{\mathbf{p}})^\top \mathbf{u}_k \frac{\partial(\mathbf{u}_k^\top (\mathbf{p}_j - \bar{\mathbf{p}}))}{\partial \mathbf{p}_i} \\[1ex]
+&= \frac{2}{N} (\mathbf{p}_i - \bar{\mathbf{p}})^\top \mathbf{u}_k \mathbf{u}_k^\top \left( I - \frac{1}{N}I \right) + \frac{2}{N} \sum_{j \neq i} (\mathbf{p}_j - \bar{\mathbf{p}})^\top \mathbf{u}_k \mathbf{u}_k^\top \left( -\frac{1}{N}I \right) \\[1ex]
+&= \frac{2}{N} (\mathbf{p}_i - \bar{\mathbf{p}})^\top \mathbf{u}_k \mathbf{u}_k^\top.
+\end{align*}$$
+- $\mathbf{A}$를 점들로 전개후, 평균 $\bar{\mathbf{p}}$가 $\mathbf{p}_i$에도 의존하기 때문에 $i=j$인 경우와 $i \neq j$인 경우로 나눠서 미분하면 $\sum_{j=1}^{N} (\mathbf{p}_j - \bar{\mathbf{p}}) = 0$을 이용해 유도 가능
+]
+---
+## Appendix (Proof Theorem2)
