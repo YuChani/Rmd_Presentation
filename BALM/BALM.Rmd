@@ -478,7 +478,7 @@ $$\begin{align*}
 &= \frac{2}{N} \sum_{j=1}^{N} (\mathbf{p}_j - \bar{\mathbf{p}})^\top \mathbf{u}_k \frac{\partial(\mathbf{u}_k^\top (\mathbf{p}_j - \bar{\mathbf{p}}))}{\partial \mathbf{p}_i} \\[1ex]
 &= \frac{2}{N} (\mathbf{p}_i - \bar{\mathbf{p}})^\top \mathbf{u}_k \mathbf{u}_k^\top \left( I - \frac{1}{N}I \right) + \frac{2}{N} \sum_{j \neq i} (\mathbf{p}_j - \bar{\mathbf{p}})^\top \mathbf{u}_k \mathbf{u}_k^\top \left( -\frac{1}{N}I \right) \\[1ex]
 &= \frac{2}{N} (\mathbf{p}_i - \bar{\mathbf{p}})^\top \mathbf{u}_k \mathbf{u}_k^\top.
-\end{align*}$$
+\end{align*}  \tag{19}$$
 - $\mathbf{A}$를 점들로 전개후, 평균 $\bar{\mathbf{p}}$가 $\mathbf{p}_i$에도 의존하기 때문에 $i=j$인 경우와 $i \neq j$인 경우로 나눠서 미분하면 $\sum_{j=1}^{N} (\mathbf{p}_j - \bar{\mathbf{p}}) = 0$을 이용해 유도 가능
 ]
 ---
@@ -539,15 +539,15 @@ $$\mathbf{p}_j=[x_j, y_j, z_j]^\top
 - 즉, $\mathbf{u}_k$가 point $\mathbf{p}_j$의 각 좌표 변화에 대해 어떻게 변하는지를 나타내는 벡터
 
 $$\begin{align*}
-\frac{\partial \mathbf{u}_k}{\partial \mathbf{p}_j} &= \left[ \frac{\partial U \mathbf{e}_k}{\partial x_j} \quad \frac{\partial U \mathbf{e}_k}{\partial y_j} \quad \frac{\partial U \mathbf{e}_k}{\partial z_j} \right] \\
-&= \left[ UC^{x_j} \mathbf{e}_k \quad UC^{y_j} \mathbf{e}_k \quad UC^{z_j} \mathbf{e}_k \right] \\
-&= U \left[ C^{x_j} \mathbf{e}_k \quad C^{y_j} \mathbf{e}_k \quad C^{z_j} \mathbf{e}_k \right] \\
-&= U \begin{bmatrix}
-C^{x_j}_{1,k} & C^{y_j}_{1,k} & C^{z_j}_{1,k} \\
-C^{x_j}_{2,k} & C^{y_j}_{2,k} & C^{z_j}_{2,k} \\
-C^{x_j}_{3,k} & C^{y_j}_{3,k} & C^{z_j}_{3,k}
+\frac{\partial \mathbf{u}_k}{\partial \mathbf{p}_j} &= \left[ \frac{\partial \mathbf{U} \mathbf{e}_k}{\partial x_j} \quad \frac{\partial \mathbf{U} \mathbf{e}_k}{\partial y_j} \quad \frac{\partial \mathbf{U} \mathbf{e}_k}{\partial z_j} \right] \\
+&= \left[ \mathbf{U}\mathbf{C}^{x_j} \mathbf{e}_k \quad \mathbf{U}\mathbf{C}^{y_j} \mathbf{e}_k \quad \mathbf{U}\mathbf{C}^{z_j} \mathbf{e}_k \right] \\
+&= \mathbf{U} \left[ \mathbf{C}^{x_j} \mathbf{e}_k \quad \mathbf{C}^{y_j} \mathbf{e}_k \quad \mathbf{C}^{z_j} \mathbf{e}_k \right] \\
+&= \mathbf{U} \begin{bmatrix}
+\mathbf{C}^{x_j}_{1,k} & \mathbf{C}^{y_j}_{1,k} & \mathbf{C}^{z_j}_{1,k} \\
+\mathbf{C}^{x_j}_{2,k} & \mathbf{C}^{y_j}_{2,k} & \mathbf{C}^{z_j}_{2,k} \\
+\mathbf{C}^{x_j}_{3,k} & \mathbf{C}^{y_j}_{3,k} & \mathbf{C}^{z_j}_{3,k}
 \end{bmatrix}
-\end{align*}$$
+\end{align*} \tag{22}$$
 ]
 ---
 ## Appendix (Proof Theorem2)
@@ -561,10 +561,83 @@ $$\mathbf{F}_{m,n}^{\mathbf{p}_j} =
 \quad \mathbf{u}_m^T \frac{\partial \mathbf{A}}{\partial z_j} \mathbf{u}_n \right]$$
 - $m = n$ 인 경우며느 $\mathbf{C}_{m,n}^q$의 정의에 따라 0이므로, $\mathbf{F}_{m,n}^{\mathbf{p}_j} = \mathbf{0}_{1 \times 3}$이다.
 - 이를 벡터 형태로 표현하면
-$$\mathbf{F}_{m,n}^{\mathbf{P}_j} = \begin{cases}
+$$\mathbf{F}_{m,n}^{\mathbf{p}_j} = \begin{cases}
 \dfrac{1}{\lambda_n - \lambda_m} \dfrac{\partial \mathbf{u}_m^T \mathbf{A} \mathbf{u}_n}{\partial \mathbf{p}_j}, & m \neq n \\
 0, & m = n
 \end{cases}$$
 ]
 ---
 ## Appendix (Proof Theorem2)
+.nt-02.f-85[
+  - $\mathbf{u}_m, \mathbf{u}_n$을 constatnt로 본다. $\mathbf{F}_{m,n}^{\mathbf{p}_j}$의 계산을 쉽게 하는 형태로 바꾸는것
+$$\frac{\partial(\mathbf{u}_m^T \mathbf{A} \mathbf{u}_n)}{\partial \mathbf{p}_j} 
+= \mathbf{u}_m^T \frac{\partial \mathbf{A}}{\partial \mathbf{p}_j} \mathbf{u}_n$$
+- (19)번 수식과 마찬가지로 covariance $\mathbf{A}$를 전개해서 $\mathbf{p}_j$에 대해 미분 진행
+$$\mathbf{A} = \frac{1}{N} \sum_{i=1}^{N} (\mathbf{p}_i - \bar{\mathbf{p}})(\mathbf{p}_i - \bar{\mathbf{p}})^T$$
+$$\mathbf{u}_m^T \mathbf{A} \mathbf{u}_n = \frac{1}{N} \sum_{i=1}^{N} \mathbf{u}_m^T (\mathbf{p}_i - \bar{\mathbf{p}})(\mathbf{p}_i - \bar{\mathbf{p}})^T \mathbf{u}_n$$
+$$\mathbf{u}_m^T \mathbf{A} \mathbf{u}_n = \frac{1}{N} \sum_{i=1}^{N} ((\mathbf{p}_i - \bar{\mathbf{p}})^T \mathbf{u}_m)((\mathbf{p}_i - \bar{\mathbf{p}})^T \mathbf{u}_n)$$
+]
+---
+## Appendix (Proof Theorem2)
+.nt-02.f-90[
+  - $\mathbf{p}_j$에 대한 미분 계산
+$$\frac{\partial(\mathbf{u}_m^T \mathbf{A} \mathbf{u}_n)}{\partial \mathbf{p}_j} = 
+\frac{1}{N} \sum_{i=1}^{N} \frac{\partial}{\partial \mathbf{p}_j} \left[ ((\mathbf{p}_i - \bar{\mathbf{p}})^T \mathbf{u}_m) ((\mathbf{p}_i - \bar{\mathbf{p}})^T \mathbf{u}_n) \right]$$
+$$= \frac{1}{N} \sum_{i=1}^{N} \left[ ((\mathbf{p}_i - \bar{\mathbf{p}})^T \mathbf{u}_m) \frac{\partial((\mathbf{p}_i - \bar{\mathbf{p}})^T \mathbf{u}_n)}{\partial \mathbf{p}_j} + 
+((\mathbf{p}_i - \bar{\mathbf{p}})^T \mathbf{u}_n) \frac{\partial((\mathbf{p}_i - \bar{\mathbf{p}})^T \mathbf{u}_m)}{\partial \mathbf{p}_j} \right]$$
+- $\mathbf{u}_m, \mathbf{u}_n$을 constatnt로 보고있으므로.
+$$\frac{\partial((\mathbf{p}_i - \bar{\mathbf{p}})^T \mathbf{u}_n)}{\partial \mathbf{p}_j} = \frac{\partial(\mathbf{p}_i - \bar{\mathbf{p}})^T}{\partial \mathbf{p}_j} \mathbf{u}_n, \quad \frac{\partial((\mathbf{p}_i - \bar{\mathbf{p}})^T \mathbf{u}_m)}{\partial \mathbf{p}_j} = \frac{\partial(\mathbf{p}_i - \bar{\mathbf{p}})^T}{\partial \mathbf{p}_j} \mathbf{u}_m$$
+]
+---
+## Appendix (Proof Theorem2)
+.nt-02.f-85[
+  - $i = j$ 항과 $i \neq j$ 항으로 나누고 centered sum 성질
+$$\sum_{i=1}^{N} (\mathbf{p}_i - \bar{\mathbf{p}}) = 0$$
+- 최종적으로 
+$$\frac{\partial(\mathbf{u}_m^T \mathbf{A} \mathbf{u}_n)}{\partial \mathbf{p}_j} = 
+\frac{(\mathbf{p}_j - \bar{\mathbf{p}})^T}{N} (\mathbf{u}_m \mathbf{u}_n^T + \mathbf{u}_n \mathbf{u}_m^T)$$
+- 위 식을 $\mathbf{F}_{m,n}^{\mathbf{p}_j}$의 정의식에 대입하면
+
+$$\mathbf{F}_{m,n}^{\mathbf{p}_j} = 
+\begin{cases} 
+\frac{(\mathbf{p}_j - \bar{\mathbf{p}})^T}{N(\lambda_n - \lambda_m)}(\mathbf{u}_m \mathbf{u}_n^T + \mathbf{u}_n \mathbf{u}_m^T), & m \neq n \\[2ex]
+\mathbf{0}, & m = n 
+\end{cases}$$
+]
+---
+## Appendix (Proof Theorem2)
+.nt-02.f-80[
+  - j번째 점 $\mathbf{p}_j$를 움직였을때, k번째 eigenvector $\mathbf{u}_k$의 변화를 의미
+$$\frac{\partial \mathbf{u}_k}{\partial \mathbf{p}_j} = \mathbf{U} \begin{bmatrix} \mathbf{F}_{1,k}^{\mathbf{p}_j} \\ \mathbf{F}_{2,k}^{\mathbf{p}_j} \\ \mathbf{F}_{3,k}^{\mathbf{p}_j} \end{bmatrix} = \mathbf{U} \mathbf{F}_k^{\mathbf{p}_j} \tag{23}$$ 
+- (19)번 수식을 $\mathbf{p}_j$에 대해 미분
+$$\begin{align*}
+\frac{\partial}{\partial \mathbf{p}_j} \left( \frac{\partial \lambda_k}{\partial \mathbf{p}_i} \right) &= \frac{2}{N} \left( \mathbf{u}_k \mathbf{u}_k^T \frac{\partial(\mathbf{p}_i - \bar{\mathbf{p}})}{\partial \mathbf{p}_j} + \mathbf{u}_k (\mathbf{p}_i - \bar{\mathbf{p}})^T \frac{\partial \mathbf{u}_k}{\partial \mathbf{p}_j} + \frac{\partial \mathbf{u}_k}{\partial \mathbf{p}_j} (\mathbf{u}_k^T (\mathbf{p}_i - \bar{\mathbf{p}})) \right) \\[2ex]
+&= \frac{2}{N} \left( \mathbf{u}_k \mathbf{u}_k^T \frac{\partial(\mathbf{p}_i - \bar{\mathbf{p}})}{\partial \mathbf{p}_j} + \mathbf{u}_k (\mathbf{p}_i - \bar{\mathbf{p}})^T \mathbf{U} \mathbf{F}_k^{\mathbf{p}_j} + \mathbf{U} \mathbf{F}_k^{\mathbf{p}_j} (\mathbf{u}_k^T (\mathbf{p}_i - \bar{\mathbf{p}})) \right) \tag{24}
+\end{align*}$$
+]
+
+???
+## Appendix (Proof Theorem2)
+.nt-02.f-85[
+  - 첫번째 항
+$$\mathbf{u}_k \mathbf{u}_k^T \frac{\partial(\mathbf{p}_i - \bar{\mathbf{p}})}{\partial \mathbf{p}_j}$$
+- 두번째 항
+$$\mathbf{u}_k (\mathbf{p}_i - \bar{\mathbf{p}})^T \mathbf{U} \mathbf{F}_k^{\mathbf{p}_j}$$
+- 세번째 항
+$$\mathbf{U} \mathbf{F}_k^{\mathbf{p}_j} (\mathbf{u}_k^T (\mathbf{p}_i - \bar{\mathbf{p}}))$$
+]
+---
+## Appendix (Proof Theorem2)
+.nt-02.f-90[
+  - $\mathbf{p}_i$에 대한 미분이 $i=j$인 경우와 $i \neq j$인 경우로 나뉘어서 계산
+$$\frac{\partial(p_i - \bar{p})}{\partial p_j} = 
+\begin{cases} 
+\frac{N-1}{N}I, & i = j \\[2ex]
+-\frac{1}{N}I, & i \neq j 
+\end{cases}$$
+- 이 값을 (24)번 수식의 첫번째 항에 대입. 나머지항은 그대로 유지
+- $i = j$인 경우
+$$\frac{N-1}{N} \mathbf{u}_k \mathbf{u}_k^T$$
+- $i \neq j$인 경우
+$$-\frac{1}{N} \mathbf{u}_k \mathbf{u}_k^T$$
+]
