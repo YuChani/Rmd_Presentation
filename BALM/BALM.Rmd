@@ -593,7 +593,7 @@ $$= \frac{1}{N} \sum_{i=1}^{N} \left[ (\mathbf{p}_i - \bar{\mathbf{p}})^\top \ma
 ## Appendix (Proof Theorem2)
 .nt-02.f-85[
   - $i = j$ 항과 $i \neq j$ 항으로 나누고,
-- 평균점 : $\bar{\mathbf{p}} = \frac{1}{N} \sum_{i=1}^{N} \mathbf{p}_i$에 대해 미분을 하면 $\frac{\partial \bar{\mathbf{p}}}{\partial \mathbf{p}_j} = \frac{1}{N} \mathbf{I}$이므로,
+- 평균점 : $\bar{\mathbf{p}} = \frac{1}{N} \sum_{i=1}^{N} \mathbf{p}_i$를 $\mathbf{p}_j$에 대해 미분을 하면 $\frac{\partial \bar{\mathbf{p}}}{\partial \mathbf{p}_j} = \frac{1}{N} \mathbf{I}$이므로,
 $$\frac{\partial(\mathbf{p}_i - \bar{\mathbf{p}})}{\partial \mathbf{p}_j} = 
 \begin{cases} 
 I - \frac{1}{N}I, & i = j, \\[2ex]
@@ -609,12 +609,41 @@ $$\begin{aligned}
 ## Appendix (Proof Theorem2)
 .nt-02.f-85[
   - $i = j$ 항과 $i \neq j$ 항으로 나누고 centered sum 성질
-$$\sum_{i=1}^{N} (\mathbf{p}_i - \bar{\mathbf{p}}) = 0$$
-- 최종적으로 
-$$\frac{\partial(\mathbf{u}_m^T \mathbf{A} \mathbf{u}_n)}{\partial \mathbf{p}_j} = 
-\frac{(\mathbf{p}_j - \bar{\mathbf{p}})^T}{N} (\mathbf{u}_m \mathbf{u}_n^T + \mathbf{u}_n \mathbf{u}_m^T)$$
-- 위 식을 $\mathbf{F}_{m,n}^{\mathbf{p}_j}$의 정의식에 대입하면
+$$\sum_{i=1}^{N} (\mathbf{p}_i - \bar{\mathbf{p}}) = 0 \rightarrow 
+\sum_{i=1}^{N} (\mathbf{p}_i - \bar{\mathbf{p}})^\top\mathbf{u}_n = 0$$
+$$\sum_{i\neq j}^{N} (\mathbf{p}_i - \bar{\mathbf{p}})^\top\mathbf{u}_n = -(\mathbf{p}_j - \bar{\mathbf{p}})^\top\mathbf{u}_n,
+\sum_{i\neq j}^{N} (\mathbf{p}_i - \bar{\mathbf{p}})^\top\mathbf{u}_m = -(\mathbf{p}_j - \bar{\mathbf{p}})^\top\mathbf{u}_m$$
+- 따라서 $i \neq j$ 항의 합은 $i = j$ 항과 정확히 반대되는 형태가 되고 대입하면, 
+$$\begin{align*}
+&\quad -\frac{1}{N^2} \sum_{i \neq j} \left[ (\mathbf{p}_i - \bar{\mathbf{p}})^\top \mathbf{u}_n \mathbf{u}_m^\top + (\mathbf{p}_i - \bar{\mathbf{p}})^\top \mathbf{u}_m \mathbf{u}_n^\top \right] \\[2ex]
+&= -\frac{1}{N^2} \left[ \left( \sum_{i \neq j} (\mathbf{p}_i - \bar{\mathbf{p}})^\top \mathbf{u}_n \right) \mathbf{u}_m^\top + \left( \sum_{i \neq j} (\mathbf{p}_i - \bar{\mathbf{p}})^\top \mathbf{u}_m \right) \mathbf{u}_n^\top \right]
+\end{align*}$$
+]
+---
+## Appendix (Proof Theorem2)
+.nt-02.f-85[
+  - 대입식 이어,
+$$\begin{align*}
+&= -\frac{1}{N^2} \left[ -(\mathbf{p}_j - \bar{\mathbf{p}})^\top \mathbf{u}_n \mathbf{u}_m^\top - (\mathbf{p}_j - \bar{\mathbf{p}})^\top \mathbf{u}_m \mathbf{u}_n^\top \right] \\[2ex]
+&= \frac{1}{N^2} \left[ (\mathbf{p}_j - \bar{\mathbf{p}})^\top \mathbf{u}_n \mathbf{u}_m^\top + (\mathbf{p}_j - \bar{\mathbf{p}})^\top \mathbf{u}_m \mathbf{u}_n^\top \right].
+\end{align*}$$
+- 전체식을 정리하면, 
+$$\begin{align*}
+&= \frac{1}{N} \left( 1 - \frac{1}{N} \right) \left[ (\mathbf{p}_j - \bar{\mathbf{p}})^\top \mathbf{u}_n \mathbf{u}_m^\top + (\mathbf{p}_j - \bar{\mathbf{p}})^\top \mathbf{u}_m \mathbf{u}_n^\top \right] \\[2ex]
+&\quad + \frac{1}{N^2} \left[ (\mathbf{p}_j - \bar{\mathbf{p}})^\top \mathbf{u}_n \mathbf{u}_m^\top + (\mathbf{p}_j - \bar{\mathbf{p}})^\top \mathbf{u}_m \mathbf{u}_n^\top \right].
+\end{align*}$$
+]
+---
+## Appendix (Proof Theorem2)
+.nt-02.f-85[
+  - 최종적으로,
+$$\frac{\partial(\mathbf{u}_m^\top A \mathbf{u}_n)}{\partial \mathbf{p}_j} = 
+\frac{1}{N} \left[ (\mathbf{p}_j - \bar{\mathbf{p}})^\top \mathbf{u}_n \mathbf{u}_m^\top + (\mathbf{p}_j - \bar{\mathbf{p}})^\top \mathbf{u}_m \mathbf{u}_n^\top \right].$$
 
+- $(\mathbf{p}_j - \bar{\mathbf{p}})^\top$를 앞으로 빼면
+$$\frac{\partial(\mathbf{u}_m^\top A \mathbf{u}_n)}{\partial \mathbf{p}_j} = 
+\frac{(\mathbf{p}_j - \bar{\mathbf{p}})^\top}{N} (\mathbf{u}_m \mathbf{u}_n^\top + \mathbf{u}_n \mathbf{u}_m^\top).$$
+- 위 식을 $\mathbf{F}_{m,n}^{\mathbf{p}_j}$의 정의식에 대입하면
 $$\mathbf{F}_{m,n}^{\mathbf{p}_j} = 
 \begin{cases} 
 \frac{(\mathbf{p}_j - \bar{\mathbf{p}})^T}{N(\lambda_n - \lambda_m)}(\mathbf{u}_m \mathbf{u}_n^T + \mathbf{u}_n \mathbf{u}_m^T), & m \neq n \\[2ex]
@@ -632,17 +661,6 @@ $$\begin{align*}
 &= \frac{2}{N} \left( \mathbf{u}_k \mathbf{u}_k^T \frac{\partial(\mathbf{p}_i - \bar{\mathbf{p}})}{\partial \mathbf{p}_j} + \mathbf{u}_k (\mathbf{p}_i - \bar{\mathbf{p}})^T \mathbf{U} \mathbf{F}_k^{\mathbf{p}_j} + \mathbf{U} \mathbf{F}_k^{\mathbf{p}_j} (\mathbf{u}_k^T (\mathbf{p}_i - \bar{\mathbf{p}})) \right) \tag{24}
 \end{align*}$$
 ]
-
-???
-## Appendix (Proof Theorem2)
-.nt-02.f-85[
-  - 첫번째 항
-$$\mathbf{u}_k \mathbf{u}_k^T \frac{\partial(\mathbf{p}_i - \bar{\mathbf{p}})}{\partial \mathbf{p}_j}$$
-- 두번째 항
-$$\mathbf{u}_k (\mathbf{p}_i - \bar{\mathbf{p}})^T \mathbf{U} \mathbf{F}_k^{\mathbf{p}_j}$$
-- 세번째 항
-$$\mathbf{U} \mathbf{F}_k^{\mathbf{p}_j} (\mathbf{u}_k^T (\mathbf{p}_i - \bar{\mathbf{p}}))$$
-]
 ---
 ## Appendix (Proof Theorem2)
 .nt-02.f-90[
@@ -657,4 +675,15 @@ $$\frac{\partial(\mathbf{p}_i - \bar{\mathbf{p}})}{\partial \mathbf{p}_j} =
 $$\frac{N-1}{N} \mathbf{u}_k \mathbf{u}_k^T$$
 - $i \neq j$인 경우
 $$-\frac{1}{N} \mathbf{u}_k \mathbf{u}_k^T$$
+]
+---
+## Appendix Conclusion
+.nt-02.f-85[
+  - Theorem1에서는 eigenvalue의 변화율이 점 $\mathbf{p}_i$의 변화에 대해 어떻게 되는지를 보여줌(gradient)
+$$\frac{\partial \lambda_k}{\partial \mathbf{p}_i} = \frac{2}{N}(\mathbf{p}_i - \bar{\mathbf{p}})^T \mathbf{u}_k \mathbf{u}_k^T$$
+- Theorem2에서는 eigenvalue의 gradient가 점 $\mathbf{p}_j$의 변화에 따라 어떻게 달라지는지를 보여줌(Hessian)
+$$\frac{\partial^2 \lambda_k}{\partial \mathbf{p}_j \partial \mathbf{p}_i} = \begin{cases}
+    \frac{2}{N} \left( \frac{N-1}{N} \mathbf{u}_k \mathbf{u}_k^T + \mathbf{u}_k (\mathbf{p}_i - \bar{\mathbf{p}})^T \mathbf{UF}^{P_j}_k + \mathbf{UF}^{P_j}_k (\mathbf{u}_k^T (\mathbf{p}_i - \bar{\mathbf{p}})) \right), & i = j \\
+    \frac{2}{N} \left( -\frac{1}{N} \mathbf{u}_k \mathbf{u}_k^T + \mathbf{u}_k (\mathbf{p}_i - \bar{\mathbf{p}})^T \mathbf{UF}^{P_j}_k + \mathbf{UF}^{P_j}_k (\mathbf{u}_k^T (\mathbf{p}_i - \bar{\mathbf{p}})) \right), & i \neq j
+\end{cases}$$
 ]
