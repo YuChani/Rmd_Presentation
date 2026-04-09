@@ -569,24 +569,41 @@ $$\mathbf{F}_{m,n}^{\mathbf{p}_j} = \begin{cases}
 ---
 ## Appendix (Proof Theorem2)
 .nt-02.f-85[
-  - $\mathbf{u}_m, \mathbf{u}_n$을 constatnt로 본다. $\mathbf{F}_{m,n}^{\mathbf{p}_j}$의 계산을 쉽게 하는 형태로 바꾸는것
+  - $\mathbf{A}$를 $\mathbf{p}_j$에 대해 미분하는 부분만 계산. $\mathbf{F}_{m,n}^{\mathbf{p}_j}$의 계산을 쉽게 하는 형태로 바꾸는것
 $$\frac{\partial(\mathbf{u}_m^T \mathbf{A} \mathbf{u}_n)}{\partial \mathbf{p}_j} 
 = \mathbf{u}_m^T \frac{\partial \mathbf{A}}{\partial \mathbf{p}_j} \mathbf{u}_n$$
 - (19)번 수식과 마찬가지로 covariance $\mathbf{A}$를 전개해서 $\mathbf{p}_j$에 대해 미분 진행
 $$\mathbf{A} = \frac{1}{N} \sum_{i=1}^{N} (\mathbf{p}_i - \bar{\mathbf{p}})(\mathbf{p}_i - \bar{\mathbf{p}})^T$$
 $$\mathbf{u}_m^T \mathbf{A} \mathbf{u}_n = \frac{1}{N} \sum_{i=1}^{N} \mathbf{u}_m^T (\mathbf{p}_i - \bar{\mathbf{p}})(\mathbf{p}_i - \bar{\mathbf{p}})^T \mathbf{u}_n$$
-$$\mathbf{u}_m^T \mathbf{A} \mathbf{u}_n = \frac{1}{N} \sum_{i=1}^{N} ((\mathbf{p}_i - \bar{\mathbf{p}})^T \mathbf{u}_m)((\mathbf{p}_i - \bar{\mathbf{p}})^T \mathbf{u}_n)$$
+<!-- $$\mathbf{u}_m^T \mathbf{A} \mathbf{u}_n = \frac{1}{N} \sum_{i=1}^{N} ((\mathbf{p}_i - \bar{\mathbf{p}})^T \mathbf{u}_m)((\mathbf{p}_i - \bar{\mathbf{p}})^T \mathbf{u}_n)$$ -->
 ]
 ---
 ## Appendix (Proof Theorem2)
 .nt-02.f-90[
   - $\mathbf{p}_j$에 대한 미분 계산
 $$\frac{\partial(\mathbf{u}_m^T \mathbf{A} \mathbf{u}_n)}{\partial \mathbf{p}_j} = 
-\frac{1}{N} \sum_{i=1}^{N} \frac{\partial}{\partial \mathbf{p}_j} \left[ ((\mathbf{p}_i - \bar{\mathbf{p}})^T \mathbf{u}_m) ((\mathbf{p}_i - \bar{\mathbf{p}})^T \mathbf{u}_n) \right]$$
-$$= \frac{1}{N} \sum_{i=1}^{N} \left[ ((\mathbf{p}_i - \bar{\mathbf{p}})^T \mathbf{u}_m) \frac{\partial((\mathbf{p}_i - \bar{\mathbf{p}})^T \mathbf{u}_n)}{\partial \mathbf{p}_j} + 
-((\mathbf{p}_i - \bar{\mathbf{p}})^T \mathbf{u}_n) \frac{\partial((\mathbf{p}_i - \bar{\mathbf{p}})^T \mathbf{u}_m)}{\partial \mathbf{p}_j} \right]$$
-- $\mathbf{u}_m, \mathbf{u}_n$을 constatnt로 보고있으므로.
-$$\frac{\partial((\mathbf{p}_i - \bar{\mathbf{p}})^T \mathbf{u}_n)}{\partial \mathbf{p}_j} = \frac{\partial(\mathbf{p}_i - \bar{\mathbf{p}})^T}{\partial \mathbf{p}_j} \mathbf{u}_n, \quad \frac{\partial((\mathbf{p}_i - \bar{\mathbf{p}})^T \mathbf{u}_m)}{\partial \mathbf{p}_j} = \frac{\partial(\mathbf{p}_i - \bar{\mathbf{p}})^T}{\partial \mathbf{p}_j} \mathbf{u}_m$$
+\frac{1}{N} \sum_{i=1}^{N} \frac{\partial}{\partial \mathbf{p}_j} \left[ \mathbf{u}_m^\top (\mathbf{p}_i - \bar{\mathbf{p}})(\mathbf{p}_i - \bar{\mathbf{p}})^\top \mathbf{u}_n \right]$$
+$$= \frac{1}{N} \sum_{i=1}^{N} \left[ ((\mathbf{p}_i - \bar{\mathbf{p}})^\top \mathbf{u}_n) \frac{\partial((\mathbf{u}_m^\top (\mathbf{p}_i - \bar{\mathbf{p}})))}{\partial \mathbf{p}_j} + 
+((\mathbf{p}_i - \bar{\mathbf{p}})^\top \mathbf{u}_m) \frac{\partial((\mathbf{u}_n^\top (\mathbf{p}_i - \bar{\mathbf{p}})))}{\partial \mathbf{p}_j} \right]$$
+$$= \frac{1}{N} \sum_{i=1}^{N} \left[ (\mathbf{p}_i - \bar{\mathbf{p}})^\top \mathbf{u}_n\mathbf{u}_m^\top  \frac{\partial(\mathbf{p}_i - \bar{\mathbf{p}})}{\partial \mathbf{p}_j} + 
+(\mathbf{p}_i - \bar{\mathbf{p}})^\top \mathbf{u}_m \mathbf{u}_n^\top \frac{\partial(\mathbf{p}_i - \bar{\mathbf{p}})}{\partial \mathbf{p}_j} \right]$$
+<!-- $$\frac{\partial((\mathbf{p}_i - \bar{\mathbf{p}})^T \mathbf{u}_n)}{\partial \mathbf{p}_j} = \frac{\partial(\mathbf{p}_i - \bar{\mathbf{p}})^T}{\partial \mathbf{p}_j} \mathbf{u}_n, \quad \frac{\partial((\mathbf{p}_i - \bar{\mathbf{p}})^T \mathbf{u}_m)}{\partial \mathbf{p}_j} = \frac{\partial(\mathbf{p}_i - \bar{\mathbf{p}})^T}{\partial \mathbf{p}_j} \mathbf{u}_m$$ -->
+]
+---
+## Appendix (Proof Theorem2)
+.nt-02.f-85[
+  - $i = j$ 항과 $i \neq j$ 항으로 나누고,
+- 평균점 : $\bar{\mathbf{p}} = \frac{1}{N} \sum_{i=1}^{N} \mathbf{p}_i$에 대해 미분을 하면 $\frac{\partial \bar{\mathbf{p}}}{\partial \mathbf{p}_j} = \frac{1}{N} \mathbf{I}$이므로,
+$$\frac{\partial(\mathbf{p}_i - \bar{\mathbf{p}})}{\partial \mathbf{p}_j} = 
+\begin{cases} 
+I - \frac{1}{N}I, & i = j, \\[2ex]
+-\frac{1}{N}I, & i \neq j.
+\end{cases}$$
+- $\mathbf{p}_j$에 대한 미분 계산식에 대입해서 정리하면,
+$$\begin{aligned}
+\frac{\partial(\mathbf{u}_m^\top \mathbf{A} \mathbf{u}_n)}{\partial \mathbf{p}_j} &= \frac{1}{N} \left[ (\mathbf{p}_j - \bar{\mathbf{p}})^\top \mathbf{u}_n \mathbf{u}_m^\top \left( I - \frac{1}{N}I \right) + (\mathbf{p}_j - \bar{\mathbf{p}})^\top \mathbf{u}_m \mathbf{u}_n^\top \left( I - \frac{1}{N}I \right) \right] \\[2ex]
+&\quad + \frac{1}{N} \sum_{i \neq j} \left[ (\mathbf{p}_i - \bar{\mathbf{p}})^\top \mathbf{u}_n \mathbf{u}_m^\top \left( -\frac{1}{N}I \right) + (\mathbf{p}_i - \bar{\mathbf{p}})^\top \mathbf{u}_m \mathbf{u}_n^\top \left( -\frac{1}{N}I \right) \right].
+\end{aligned}$$
 ]
 ---
 ## Appendix (Proof Theorem2)
@@ -630,7 +647,7 @@ $$\mathbf{U} \mathbf{F}_k^{\mathbf{p}_j} (\mathbf{u}_k^T (\mathbf{p}_i - \bar{\m
 ## Appendix (Proof Theorem2)
 .nt-02.f-90[
   - $\mathbf{p}_i$에 대한 미분이 $i=j$인 경우와 $i \neq j$인 경우로 나뉘어서 계산
-$$\frac{\partial(p_i - \bar{p})}{\partial p_j} = 
+$$\frac{\partial(\mathbf{p}_i - \bar{\mathbf{p}})}{\partial \mathbf{p}_j} = 
 \begin{cases} 
 \frac{N-1}{N}I, & i = j \\[2ex]
 -\frac{1}{N}I, & i \neq j 
