@@ -211,7 +211,11 @@ f(\overline{\mathbf{x}}) +
 ## Optimization
 .nt-02.f-90[
 - Gauss-Newton 방법
+  - `\(m\)`개의 데이터에서 `\(i\)`번째 residual 함수 `\(e_i(\mathbf{x})\in\mathbb{R}, \mathbf{x}\in\mathbb{R}^n\)`가 주어졌을 때, 손실함수는 
+  - `\(\mathbf{e}(\mathbf{x}) = [e_1(\mathbf{x}), e_2(\mathbf{x}), \dots, e_m(\mathbf{x})]^\top\in\mathbb{R}^m\)`
 `$$f(\mathbf{x}) = \frac{1}{2} \sum_{i=1}^m {e_i}^2(\mathbf{x}) = \frac{1}{2} \mathbf{e}(\mathbf{x})^\top \mathbf{e}(\mathbf{x})$$`
+- `\(\mathbf{e}(\mathbf{x})\)`를 `\(\mathbf{x}=\bar{\mathbf{x}}\)`에서 1차 근사화하면,
+`$$\mathbf{e}(\mathbf{x}) \approx \mathbf{e}(\bar{\mathbf{x}}) + \mathbf{J}(\bar{\mathbf{x}})(\mathbf{x} - \bar{\mathbf{x}})$$`
 ]
 ---
 ## Optimization
