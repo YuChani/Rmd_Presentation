@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>BALM: Bundle Adjustment for Lidar Mapping</title>
+    <meta charset="utf-8" />
+    <script src="libs/header-attrs-2.30/header-attrs.js"></script>
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+    <link rel="stylesheet" href="../Xaringan_Example/swan/swan.css" type="text/css" />
+    <link rel="stylesheet" href="../Xaringan_Example/swan/swan-fonts.css" type="text/css" />
+    <link rel="stylesheet" href="../Xaringan_Example/swan/swan-all-fonts.css" type="text/css" />
+    <link rel="stylesheet" href="../Xaringan_Example/swan/tachyons_ext.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+.title[
+# BALM: Bundle Adjustment for Lidar Mapping
+]
+.subtitle[
+## RA-L, 2021
+]
+.author[
+### <p>Zheng Liu, Fu Zhang<br>
+Department of Mechanical Engineering, The University of Hong Kong</p>
+]
+.date[
+### 2026.03.30
+]
+
+---
+
+## Projection
+.nt-02.pull-left-45[
+![:scale 70%](fig/vec_projection.png)
+]
+.nt-02.pull-right-55.f-90[
+  - Projection Vector
+  - 크기 :  
+`$$\mathbf{a} \cdot \mathbf{b} = \|\mathbf{a}\|\|\mathbf{b}\|\cos\theta = (\|\mathbf{a}\|\cos\theta)\|\mathbf{b}\|$$`
+`$$\frac{\mathbf{a} \cdot \mathbf{b}}{\|\mathbf{b}\|} = \|\mathbf{a}\|\cos\theta = \|\mathbf{a}_{\parallel}\|$$`
+
+  - 방향 : `\(\hat{\mathbf{a}_{\parallel}} = \hat{\mathbf{b}} = \frac{\mathbf{b}}{\|\mathbf{b}\|}\)`
+  - Projection vector = 방향 x 크기
+`$$\therefore \mathbf{a}_{\parallel} = \|\mathbf{a}_{\parallel}\| \cdot \hat{\mathbf{a}}_{\parallel} = \frac{\mathbf{a} \cdot \mathbf{b}}{\|\mathbf{b}\|} \cdot \frac{\mathbf{b}}{\|\mathbf{b}\|} = \frac{(\mathbf{b}\mathbf{b}^\top)}{\mathbf{b}^\top\mathbf{b}}\mathbf{a}$$`
+]
+---
+## Projection
+.nt-02.pull-left-45[
+![:scale 70%](fig/vec_projection.png)
+]
+.nt-02.pull-right-55.f-90[
+  - rejection vector : a에서 b방향 성분을 제거 하고 남은 벡터
+`$$\mathbf{a}_{\perp} = \mathbf{a} - \mathbf{a}_{\parallel}$$`
+- `\(\mathbf{a}_{\perp}\)`는 `\(\mathbf{b}\)`에 수직한 방향이므로 `\(\mathbf{a}_{\perp} \cdot \mathbf{b} = 0\)`
+- 앞에서 Projection한 `\(\mathbf{a}_{\parallel}\)`은
+`$$\mathbf{a}_{\parallel} = \frac{(\mathbf{b}\mathbf{b}^\top)}{\mathbf{b}^\top\mathbf{b}}\mathbf{a}$$`
+- 따라서 `\(\mathbf{a}_{\perp}\)`는
+`$$\mathbf{a}_{\perp} = \mathbf{a} - \frac{(\mathbf{b}\mathbf{b}^\top)}{\mathbf{b}^\top\mathbf{b}}\mathbf{a} = 
+\left( \mathbf{I} - \frac{(\mathbf{b}\mathbf{b}^\top)}{\mathbf{b}^\top\mathbf{b}} \right) \mathbf{a}$$`
+]
+---
+## Projection
+.nt-02.pull-left-45[
+![:scale 70%](fig/plane.png)
+]
+.nt-02.pull-right-55.f-90[
+  - Plane feature : 벡터가 평면에 투영된 결과
+`$$\mathbf{n}^\top(\mathbf{p}_i - \mathbf{q})$$`
+  - `\(\mathbf{n}\)` : 평면의 법선 벡터, `\(\mathbf{q}\)` : 평면 위의 한 점- `\(\mathbf{p}_i\)` : 투영하려는 벡터
+- `\(\mathbf{e}=\mathbf{p}_i - \mathbf{q}\)`라 정의하면, 위 식은 `\(\mathbf{e}\)`를 평면의 normal vector에 projection한 결과
+
+]
+---
+## Projection
+.nt-02.pull-left-45[
+![:scale 70%](fig/edge.png)
+]
+.nt-02.pull-right-55.f-90[
+  - Edge feature : 벡터가 선에 투영된 결과
+`$$(\mathbf{I}-\mathbf{nn}^\top)(\mathbf{p}_i - \mathbf{q})$$`
+  - `\(\mathbf{n}\)` : 선의 방향 벡터, `\(\mathbf{q}\)` : 선 위의 한 점- `\(\mathbf{p}_i\)` : 투영하려는 벡터
+- `\(\mathbf{e}=\mathbf{p}_i - \mathbf{q}\)`라 정의하면, 위 식은 `\(\mathbf{e}\)`를 선의 direction vector에 projection한 결과를 `\(\mathbf{e}\)`에서 빼서 선에 수직한 방향으로 남긴 결과
+`$$\mathbf{e} = \mathbf{e}_\perp + \mathbf{e}_\parallel \rightarrow \mathbf{e}_\perp = \mathbf{e}-\mathbf{e}_\parallel$$`
+`$$\mathbf{e}_\perp = \mathbf{e}-\frac{\mathbf{n} \cdot \mathbf{n}^\top}{\mathbf{n} \cdot \mathbf{n}} \mathbf{e} 
+= (\mathbf{I}-\frac{\mathbf{n} \cdot \mathbf{n}^\top}{\mathbf{n} \cdot \mathbf{n}}) \mathbf{e}$$`
+]
+---
+## Optimization
+.nt-02.f-90[
+  - non-linear optimization는 직접 풀기 어렵기 때문에 미분과 Taylor 근사를 이용함
+- 다변수 스칼라 함수 편미분
+`$$y \in \mathbb{R}, \mathbf{x}=[x_1, x_2, \dots, x_n]^\top \in \mathbb{R}^n$$`
+`$$\frac{\partial y}{\partial \mathbf{x}} = \left[ \frac{\partial y}{\partial x_1}, \frac{\partial y}{\partial x_2}, \dots, \frac{\partial y}{\partial x_n} \right] \in \mathbb{R}^{1 \times n}$$`
+`$$\nabla y = (\frac{\partial y}{\partial \mathbf{x}})^\top \in \mathbb{R}^{n\times 1}$$`
+  - 스칼라 함수 `\(y\)`를 벡터 `\(\mathbf{x}\)`로 편미분하면, 편미분 결과는 `\(\mathbf{x}\)`의 각 원소에 대한 편미분값을 원소로 하는 행벡터가 됨
+`$$\frac{\partial(\mathbf{x}^\top \mathbf{A} \mathbf{x})}{\partial \mathbf{x}} = 
+2\mathbf{x}^\top \mathbf{A} \in \mathbb{R}^{1 \times n}$$`
+`$$\mathbf{A}=\mathbf{A}^\top$$`
+]
+---
+## Optimization
+.nt-02.f-90[
+- 다변수 벡터 함수 편미분
+`$$\mathbf{y}=[y_1, y_2, \dots, y_m]^\top \in \mathbb{R}^m, \mathbf{x}=[x_1, x_2, \dots, x_n]^\top \in \mathbb{R}^n$$`
+`$$\frac{\partial \mathbf{y}}{\partial \mathbf{x}} = \begin{bmatrix} \frac{\partial y_1}{\partial x_1} &amp; \frac{\partial y_1}{\partial x_2} &amp; \dots &amp; \frac{\partial y_1}{\partial x_n} \\ \frac{\partial y_2}{\partial x_1} &amp; \frac{\partial y_2}{\partial x_2} &amp; \dots &amp; \frac{\partial y_2}{\partial x_n} \\ \vdots &amp; \vdots &amp; \ddots &amp; \vdots \\ \frac{\partial y_m}{\partial x_1} &amp; \frac{\partial y_m}{\partial x_2} &amp; \dots &amp; \frac{\partial y_m}{\partial x_n} \end{bmatrix} \in \mathbb{R}^{m \times n}$$`
+  - 벡터 함수 `\(\mathbf{y}\)`를 벡터 `\(\mathbf{x}\)`로 편미분하면, 편미분 결과는 `\(y_i\)`의 각 원소에 대한 편미분값을 원소로 하는 행렬이 됨
+`$$\frac{\partial \mathbf{Ax}}{\partial \mathbf{x}} = \mathbf{A}$$`
+]
+---
+## Optimization
+.nt-02.f-90[
+- Taylor 근사화 (다변수 스칼라 함수)
+  - **입력이 벡터, 출력이 스칼라** `\(f(\mathbf{x})\in \mathbb{R}, \mathbf{x} \in \mathbb{R}^n\)`를 `\(\mathbf{x}=\bar{\mathbf{x}}\)`에서 1차 근사화하면,
+`$$f(\mathbf{x}) = 
+f(\overline{\mathbf{x}}) + 
+\nabla f(\overline{\mathbf{x}})^\top (\mathbf{x} - \overline{\mathbf{x}}) + 
+\frac{1}{2}(\mathbf{x} - \overline{\mathbf{x}})^\top \mathbf{H}(\overline{\mathbf{x}})(\mathbf{x} - \overline{\mathbf{x}}) + 
+\cdots$$`
+- `\(\mathbf{x}=[x_1, x_2, \dots, x_n]^\top\)`일때 Gradient `\(\nabla f \in \mathbb{R}^n\)`, Hessian `\(\mathbf{H} \in \mathbb{R}^{n \times n}\)`는 다음과 같다.
+`$$\nabla f = 
+\begin{bmatrix} 
+\frac{\partial f}{\partial x_1} \\
+\frac{\partial f}{\partial x_2} \\
+\vdots \\
+\frac{\partial f}{\partial x_n} 
+\end{bmatrix}, \quad
+\mathbf{H} = 
+\begin{bmatrix} 
+\frac{\partial^2 f}{\partial x_1^2} &amp; \frac{\partial^2 f}{\partial x_1 \partial x_2} &amp; \dots &amp; \frac{\partial^2 f}{\partial x_1 \partial x_n} \\
+\frac{\partial^2 f}{\partial x_2 \partial x_1} &amp; \frac{\partial^2 f}{\partial x_2^2} &amp; \dots &amp; \frac{\partial^2 f}{\partial x_2 \partial x_n} \\
+\vdots &amp; \vdots &amp; \ddots &amp; \vdots \\
+\frac{\partial^2 f}{\partial x_n \partial x_1} &amp; \frac{\partial^2 f}{\partial x_n \partial x_2} &amp; \dots &amp; \frac{\partial^2 f}{\partial x_n^2} 
+\end{bmatrix}$$`
+- 다변수 스칼라 함수 정의에 따라 gradient `\(\nabla f = (\frac{\partial f}{\partial \mathbf{x}})^\top\)`, Hessian `\(\mathbf{H} = \frac{\partial \nabla f}{\partial \mathbf{x}}\)`로 표현가능
+]
+---
+## Optimization
+.nt-02.f-90[
+  - Taylor 근사화 (다변수 벡터 함수)
+  - **입력/출력 모두 벡터** `\(\mathbf{f}(\mathbf{x}) \in \mathbb{R}^m, \mathbf{x} \in \mathbb{R}^n\)`를 `\(\mathbf{x}=\bar{\mathbf{x}}\)`에서 1차 근사화하면,
+`$$\mathbf{f}(\mathbf{x}) = \mathbf{f}(\bar{\mathbf{x}}) + 
+\mathbf{J}(\bar{\mathbf{x}})(\mathbf{x} - \bar{\mathbf{x}})+\cdots$$`
+
+- `\(\mathbf{f}=[f_1, f_2, \dots, f_m]^\top\)`일때 Jacobian `\(\mathbf{J} \in \mathbb{R}^{m \times n}\)`는 다음과 같다.
+`$$\mathbf{J} = 
+\begin{bmatrix} 
+\frac{\partial f_1}{\partial x_1} &amp; \frac{\partial f_1}{\partial x_2} &amp; \dots &amp; \frac{\partial f_1}{\partial x_n} \\
+\frac{\partial f_2}{\partial x_1} &amp; \frac{\partial f_2}{\partial x_2} &amp; \dots &amp; \frac{\partial f_2}{\partial x_n} \\
+\vdots &amp; \vdots &amp; \ddots &amp; \vdots \\
+\frac{\partial f_m}{\partial x_1} &amp; \frac{\partial f_m}{\partial x_2} &amp; \dots &amp; \frac{\partial f_m}{\partial x_n} 
+\end{bmatrix}$$`
+- 다변수 벡터 함수 미분 정의에 따르면 `\(\mathbf{J} = \frac{\partial \mathbf{f}}{\partial \mathbf{x}} \in \mathbb{R}^{m \times n}\)`
+]
+
+---
+## Optimization
+.nt-02.f-90[
+  - **Gradient**
+`$$\nabla f = (\frac{\partial f}{\partial \mathbf{x}})^\top$$`
+  - loss function이 가장 빨리 증가하는 방향, `\(-\nabla f\)`는 가장 빨리 감소하는 방향
+  - gradient는 loss를 줄이기 위해 어디로 가야하는지 알려줌
+- **Hessian**
+`$$\mathbf{H} = \frac{\partial \nabla f}{\partial \mathbf{x}}$$`
+  - loss function의 curvature를 나타냄. gradient의 변화율
+  - Hessian은 표면이 어느정도로 휘어져있는지 알려줌
+]
+
+---
+## Optimization
+.nt-02.f-90[
+  - **Jacobian**
+`$$\mathbf{J} = \frac{\partial \mathbf{f}}{\partial \mathbf{x}} \in \mathbb{R}^{m \times n}$$`
+  - 벡터 함수 `\(\mathbf{f}\)`의 각 원소 `\(f_i\)`가 벡터 `\(\mathbf{x}\)`의 각 원소 `\(x_j\)`에 대해 어떻게 변화하는지 나타냄
+  - Jacobian은 벡터 함수의 변화율을 나타냄. `\(\mathbf{f}\)`가 `\(\mathbf{x}\)`에 대해 어떻게 변화하는지 알려줌
+
+- 최적화 문제는 목적함수 `\(f(\mathbf{x})\in \mathbb{R}^m\)`가 주어졌을때 최소화하는 최적해 `\(\mathbf{x}^*\in \mathbb{R}^n\)`를 찾는 문제
+`$$\mathbf{x}^* = \arg\min_{\mathbf{x}} f(\mathbf{x})$$`
+  - `\(f(\mathbf{x})\)`가 가장 작은 `\(\mathbf{x}^*\)`를 찾는 문제
+- **gradient method** : 1차 Taylor 근사화 이용
+- **Newton method** : 2차 Taylor 근사화 이용
+]
+---
+## Optimization
+.nt-02.f-90[
+  - 다변수 스칼라 함수 gradient 방법
+  - `\(f(\mathbf{x})\in\mathbb{R}, \mathbf{x} \in \mathbb{R}^n\)`를 `\(\mathbf{x}=\bar{\mathbf{x}}\)`에서 1차 근사화하면,
+`$$f(\mathbf{x}) \approx f(\bar{\mathbf{x}}) + \nabla f(\bar{\mathbf{x}})^\top (\mathbf{x} - \bar{\mathbf{x}})$$`
+- gradient `\(\nabla f(\bar{\mathbf{x}})\)`는 `\(\bar{\mathbf{x}}\)`에서 `\(f\)`가 가장 빠르게 증가하는 방향을 나타냄 (-)를 붙여서 반대로 가면 `\(f\)`가 가장 빠르게 감소하는 방향이 됨
+
+- update : `\(\bar{\mathbf{x}} \leftarrow \bar{\mathbf{x}} - \alpha \nabla f(\bar{\mathbf{x}})\)`
+  - `\(\alpha\)` : learning rate, step size. 너무 크면 발산, 너무 작으면 수렴이 느려짐
+  - `\(\alpha\)`값으로 gradient가 얼만큼 가야하는지 결정
+- gradient는 방향정보, 1차 근사는 접평면근사, gradient descent는 기울기 반대방향으로 이동
+]
+---
+## Optimization
+.nt-02.f-85[
+  - Newton 방법
+  - `\(f(\mathbf{x})\in\mathbb{R}, \mathbf{x}\in\mathbb{R}^n\)`을 한점 `\(\mathbf{x}=\bar{\mathbf{x}}\)`에서 2차 근사화하면,
+`$$f(\mathbf{x}) \approx f(\bar{\mathbf{x}}) + \nabla f(\bar{\mathbf{x}})^\top (\mathbf{x} - \bar{\mathbf{x}}) + \frac{1}{2} (\mathbf{x} - \bar{\mathbf{x}})^\top \mathbf{H}(\bar{\mathbf{x}}) (\mathbf{x} - \bar{\mathbf{x}})$$`
+`$$\frac{\partial f(\mathbf{x})}{\partial \mathbf{x}} = \nabla f(\bar{\mathbf{x}}) + \mathbf{H}(\bar{\mathbf{x}})(\mathbf{x} - \bar{\mathbf{x}})$$`
+- 최소가 되는곳은 `\(\frac{\partial f(\mathbf{x})}{\partial \mathbf{x}} = 0\)`인 지점. `\(\delta{\mathbf{x}} = \mathbf{x} - \bar{\mathbf{x}}\)`라 하면,
+`$$\mathbf{H}(\bar{\mathbf{x}})\delta\mathbf{x} = -\nabla f(\bar{\mathbf{x}})$$`
+- 위 식의 해를 `\(\bar{\mathbf{x}} \leftarrow \bar{\mathbf{x}} + \delta \mathbf{x}\)`에 대입하면,
+  
+- update : `\(\bar{\mathbf{x}} \leftarrow \bar{\mathbf{x}} - \mathbf{H}(\bar{\mathbf{x}})^{-1} \nabla f(\bar{\mathbf{x}})\)`
+]
+---
+## Optimization
+.nt-02.f-90[
+- Gauss-Newton 방법
+`$$f(\mathbf{x}) = \frac{1}{2} \sum_{i=1}^m {e_i}^2(\mathbf{x}) = \frac{1}{2} \mathbf{e}(\mathbf{x})^\top \mathbf{e}(\mathbf{x})$$`
+]
+---
+## Optimization
+.nt-02.f-90[
+  
+]
+---
+## Optimization
+.nt-02.f-90[
+  
+]
+---
+## Optimization
+.nt-02.f-90[
+  
+]
+---
+## Optimization
+.nt-02.f-90[
+  
+]
+
+
+
+
+???
+근사화 방법? -&gt; 테일러 전개
+gradient : 스칼라를 벡터로 미분 -&gt; 행벡터 1xn
+hessian : gradient를 벡터로 미분 -&gt; 행렬 nxn
+jacobian : 오차벡터를 벡터로 미분 -&gt; 행렬 mxn
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script src="../Xaringan_Example/swan/macros.js"></script>
+<script>var slideshow = remark.create({
+  "ratio": "16:9",
+  "highlightStyle": "github",
+  "highlightLines": true,
+  "countIncrementalSlides": false,
+  "scale": true
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
