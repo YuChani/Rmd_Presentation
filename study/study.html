@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="" xml:lang="">
   <head>
-    <title>Projection and Optimization with BALM</title>
+    <title>Study on Projection and Optimization with BALM</title>
     <meta charset="utf-8" />
     <script src="libs/header-attrs-2.30/header-attrs.js"></script>
     <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
@@ -16,17 +16,17 @@
 class: center, middle, inverse, title-slide
 
 .title[
-# Projection and Optimization with BALM
+# Study on Projection and Optimization with BALM
 ]
 .subtitle[
 ## CVRL
 ]
 .author[
-### <p>YUchan KIM<br>
+### <p>Yuchan KIM<br>
 Kwangwoon University</p>
 ]
 .date[
-### 2026.03.30
+### 2026.04.20
 ]
 
 ---
@@ -43,12 +43,13 @@ Kwangwoon University</p>
 ]
 .nt-02.pull-right-55.f-85[
   - **Projection Vector**
-  - 크기 :  
+  - **내적(dot product)** :   
 `$$\mathbf{a} \cdot \mathbf{b} = \|\mathbf{a}\|\|\mathbf{b}\|\cos\theta = (\|\mathbf{a}\|\cos\theta)\|\mathbf{b}\|$$`
-`$$\frac{\mathbf{a} \cdot \mathbf{b}}{\|\mathbf{b}\|} = \|\mathbf{a}\|\cos\theta = \|\mathbf{a}_{\parallel}\|$$`
-
-  - 방향 : `\(\hat{\mathbf{a}_{\parallel}} = \hat{\mathbf{b}} = \frac{\mathbf{b}}{\|\mathbf{b}\|}\)`
-  - Projection vector = 방향 x 크기
+  - **projection의 크기** : 
+`$$\|\mathbf{a}_{\parallel}\| = \frac{\mathbf{a} \cdot \mathbf{b}}{\|\mathbf{b}\|} = \|\mathbf{a}\|\cos\theta$$`
+  - **projection의 방향**:
+`$$\hat{\mathbf{a}_{\parallel}} = \hat{\mathbf{b}} = \frac{\mathbf{b}}{\|\mathbf{b}\|}$$`
+  - **Projection vector = 방향 x 크기**
 `$$\therefore \mathbf{a}_{\parallel} = \|\mathbf{a}_{\parallel}\| \cdot \hat{\mathbf{a}}_{\parallel} = \frac{\mathbf{a} \cdot \mathbf{b}}{\|\mathbf{b}\|} \cdot \frac{\mathbf{b}}{\|\mathbf{b}\|} = \frac{(\mathbf{b}\mathbf{b}^\top)}{\mathbf{b}^\top\mathbf{b}}\mathbf{a}$$`
 ]
 ---
@@ -119,8 +120,8 @@ Kwangwoon University</p>
 ---
 ## Optimization
 .nt-02.f-85[
-- **Taylor 근사화 (다변수 스칼라 함수)**
-  - **입력이 벡터, 출력이 스칼라** `\(f(\mathbf{x})\in \mathbb{R}, \mathbf{x} \in \mathbb{R}^n\)`를 `\(\mathbf{x}=\bar{\mathbf{x}}\)`에서 1차 근사화하면,
+- **Taylor approximation (다변수 스칼라 함수)**
+  - **입력이 벡터, 출력이 스칼라** `\(f(\mathbf{x})\in \mathbb{R}, \mathbf{x} \in \mathbb{R}^n\)`를 `\(\mathbf{x}=\bar{\mathbf{x}}\)`에서 1차 approximation하면,
 `$$f(\mathbf{x}) = 
 f(\overline{\mathbf{x}}) + 
 \nabla f(\overline{\mathbf{x}})^\top (\mathbf{x} - \overline{\mathbf{x}}) + 
@@ -146,8 +147,8 @@ f(\overline{\mathbf{x}}) +
 ---
 ## Optimization
 .nt-02.f-85[
-  - **Taylor 근사화 (다변수 벡터 함수)**
-  - **입력/출력 모두 벡터** `\(\mathbf{f}(\mathbf{x}) \in \mathbb{R}^m, \mathbf{x} \in \mathbb{R}^n\)`를 `\(\mathbf{x}=\bar{\mathbf{x}}\)`에서 1차 근사화하면,
+  - **Taylor approximation (다변수 벡터 함수)**
+  - **입력/출력 모두 벡터** `\(\mathbf{f}(\mathbf{x}) \in \mathbb{R}^m, \mathbf{x} \in \mathbb{R}^n\)`를 `\(\mathbf{x}=\bar{\mathbf{x}}\)`에서 1차 approximation하면,
 `$$\mathbf{f}(\mathbf{x}) = \mathbf{f}(\bar{\mathbf{x}}) + 
 \mathbf{J}(\bar{\mathbf{x}})(\mathbf{x} - \bar{\mathbf{x}})+\cdots$$`
 
@@ -164,7 +165,7 @@ f(\overline{\mathbf{x}}) +
 
 ---
 ## Optimization
-.nt-02.f-85[
+.nt-02.pull-left-60.f-85[
   - **Gradient**
 `$$\nabla f = (\frac{\partial f}{\partial \mathbf{x}})^\top$$`
   - loss function이 가장 빨리 증가하는 방향, `\(-\nabla f\)`는 가장 빨리 감소하는 방향
@@ -175,6 +176,12 @@ f(\overline{\mathbf{x}}) +
   - loss function의 curvature를 나타냄. gradient의 변화율
   - Hessian은 표면이 어느정도로 휘어져있는지 알려줌
   - 방향의 곡률과 얼마나 조절해야하는지 알려주는 행렬
+]
+.nt-02.pull-right-35.f-85[
+- gradient
+![:scale 100%](fig/gradient.png)
+- Hessian
+![:scale 100%](fig/hessian.png)
 ]
 
 ---
@@ -189,14 +196,14 @@ f(\overline{\mathbf{x}}) +
 - 최적화 문제는 목적함수 `\(f(\mathbf{x})\in \mathbb{R}^m\)`가 주어졌을때 최소화하는 최적해 `\(\mathbf{x}^*\in \mathbb{R}^n\)`를 찾는 문제
 `$$\mathbf{x}^* = \arg\min_{\mathbf{x}} f(\mathbf{x})$$`
   - `\(f(\mathbf{x})\)`가 가장 작은 `\(\mathbf{x}^*\)`를 찾는 문제
-- **gradient method** : 1차 Taylor 근사화 이용
-- **Newton method** : 2차 Taylor 근사화 이용
+- **gradient method** : 1차 Taylor approximation 이용
+- **Newton method** : 2차 Taylor approximation 이용
 ]
 ---
 ## Optimization
 .nt-02.f-85[
   - **다변수 스칼라 함수 gradient 방법**
-  - `\(f(\mathbf{x})\in\mathbb{R}, \mathbf{x} \in \mathbb{R}^n\)`를 `\(\mathbf{x}=\bar{\mathbf{x}}\)`에서 1차 근사화하면,
+  - `\(f(\mathbf{x})\in\mathbb{R}, \mathbf{x} \in \mathbb{R}^n\)`를 `\(\mathbf{x}=\bar{\mathbf{x}}\)`에서 1차 approximation하면,
 `$$f(\mathbf{x}) \approx f(\bar{\mathbf{x}}) + \nabla f(\bar{\mathbf{x}})^\top (\mathbf{x} - \bar{\mathbf{x}})$$`
 - gradient `\(\nabla f(\bar{\mathbf{x}})\)`는 `\(\bar{\mathbf{x}}\)`에서 `\(f\)`가 가장 빠르게 증가하는 방향을 나타냄 (-)를 붙여서 반대로 가면 `\(f\)`가 가장 빠르게 감소하는 방향이 됨
 
@@ -209,7 +216,7 @@ f(\overline{\mathbf{x}}) +
 ## Optimization
 .nt-02.f-85[
   - **Newton 방법**
-  - `\(f(\mathbf{x})\in\mathbb{R}, \mathbf{x}\in\mathbb{R}^n\)`을 한점 `\(\mathbf{x}=\bar{\mathbf{x}}\)`에서 2차 근사화하면,
+  - `\(f(\mathbf{x})\in\mathbb{R}, \mathbf{x}\in\mathbb{R}^n\)`을 한점 `\(\mathbf{x}=\bar{\mathbf{x}}\)`에서 2차 approximation하면,
 `$$f(\mathbf{x}) \approx f(\bar{\mathbf{x}}) + \nabla f(\bar{\mathbf{x}})^\top (\mathbf{x} - \bar{\mathbf{x}}) + \frac{1}{2} (\mathbf{x} - \bar{\mathbf{x}})^\top \mathbf{H}(\bar{\mathbf{x}}) (\mathbf{x} - \bar{\mathbf{x}})$$`
 `$$\frac{\partial f(\mathbf{x})}{\partial \mathbf{x}} = \nabla f(\bar{\mathbf{x}}) + \mathbf{H}(\bar{\mathbf{x}})(\mathbf{x} - \bar{\mathbf{x}})$$`
 - 최소가 되는곳은 `\(\frac{\partial f(\mathbf{x})}{\partial \mathbf{x}} = 0\)`인 지점. `\(\delta{\mathbf{x}} = \mathbf{x} - \bar{\mathbf{x}}\)`라 해, normal equation을 풀면,
@@ -225,9 +232,9 @@ f(\overline{\mathbf{x}}) +
   - `\(m\)`개의 데이터에서 `\(i\)`번째 residual 함수 `\(e_i(\mathbf{x})\in\mathbb{R}, \mathbf{x}\in\mathbb{R}^n\)`가 주어졌을 때, 손실함수는 
   - `\(\mathbf{e}(\mathbf{x}) = [e_1(\mathbf{x}), e_2(\mathbf{x}), \dots, e_m(\mathbf{x})]^\top\in\mathbb{R}^m\)`은 residual vector
 `$$f(\mathbf{x}) = \frac{1}{2} \sum_{i=1}^m {e_i}^2(\mathbf{x}) = \frac{1}{2} \mathbf{e}(\mathbf{x})^\top \mathbf{e}(\mathbf{x})$$`
-- `\(\mathbf{e}(\mathbf{x})\)`를 taylor 전개를 이용해서 `\(\mathbf{x}=\bar{\mathbf{x}}\)`에서 1차 근사화하면,
+- `\(\mathbf{e}(\mathbf{x})\)`를 taylor approximation를 이용해서 `\(\mathbf{x}=\bar{\mathbf{x}}\)`에서 1차 approximation하면,
 `$$\mathbf{e}(\mathbf{x}) \approx \mathbf{e}(\bar{\mathbf{x}}) + \mathbf{J}_e(\bar{\mathbf{x}})(\mathbf{x} - \bar{\mathbf{x}})$$`
-- `\(\bar{\mathbf{e}}=\mathbf{e}(\bar{\mathbf{x}})\)`, `\(\bar{\mathbf{J}_e}=\mathbf{J}_e(\bar{\mathbf{x}})\)`라 하고, 근사화식을 손실함수에 대입하면,
+- `\(\bar{\mathbf{e}}=\mathbf{e}(\bar{\mathbf{x}})\)`, `\(\bar{\mathbf{J}_e}=\mathbf{J}_e(\bar{\mathbf{x}})\)`라 하고, approximation식을 손실함수에 대입하면,
 `$$f(\mathbf{x}) \approx 
 \frac{1}{2} 
 (\bar{\mathbf{e}} + \bar{\mathbf{J}_e}(\mathbf{x} - \bar{\mathbf{x}}))^\top 
@@ -245,7 +252,7 @@ f(\overline{\mathbf{x}}) +
   - Newton 방법의 2차 근사식과 비교하면,
 `$$\nabla f(\bar{\mathbf{x}}) \approx \bar{\mathbf{J}_e}^\top \bar{\mathbf{e}}\in \mathbb{R}^n$$` 
 `$$\mathbf{H}_f(\bar{\mathbf{x}}) \approx \bar{\mathbf{J}_e}^\top \bar{\mathbf{J}_e} \in \mathbb{R}^{n \times n}$$`  
-- Newton 방법의 norma equation과 비교하면,
+- Newton 방법의 normal equation과 비교하면,
 `$$\bar{\mathbf{J}_e}^\top \bar{\mathbf{J}_e} \delta \mathbf{x} = -\bar{\mathbf{J}_e}^\top \bar{\mathbf{e}}$$`
   - `\(\bar{\mathbf{J}_e}^\top \bar{\mathbf{J}_e}\)`는 Hessian의 근사값, `\(\bar{\mathbf{J}_e}^\top \bar{\mathbf{e}}\)`는 gradient의 근사값
 - update는 `\(\bar{\mathbf{x}} \leftarrow \bar{\mathbf{x}} + \delta \mathbf{x}\)`에 대입하면,
@@ -274,15 +281,15 @@ f(\overline{\mathbf{x}}) +
 .nt-02.f-85[
 - BALM의 목적함수
 `$$f(\mathbf{T})=\lambda_k(\mathbf{p}(\mathbf{T}))$$`
-  - point vector `\(\mathbf{p} = [\mathbf{p}^\top_1, \mathbf{p}^\top_2, \dots, \mathbf{p}^\top_N]^\top\)`에 대해 미분을 전개후 chain rule로 `\(\mathbf{T}\)`에 대한 미분, `\(\mathbf{T}\)`에대한 2차 근사화 진행
+  - point vector `\(\mathbf{p} = [\mathbf{p}^\top_1, \mathbf{p}^\top_2, \dots, \mathbf{p}^\top_N]^\top\)`에 대해 미분을 전개후 chain rule로 `\(\mathbf{T}\)`에 대한 미분, `\(\mathbf{T}\)`에대한 2차 approximation 진행
 `$$\frac{\partial f}{\partial \mathbf{T}}=\frac{\partial\lambda_k}{\partial \mathbf{p}} \frac{\partial \mathbf{p}}{\partial \mathbf{T}}$$`
-- point vector `\(\mathbf{p}\)`에 대한 cost를 2차 Taylor로 근사화
+- point vector `\(\mathbf{p}\)`에 대한 cost를 2차 Taylor로 approximation
 `$$\lambda_k(\mathbf{p} + \delta\mathbf{p}) \approx 
 \lambda_k(\mathbf{p}) + 
 \mathbf{J}(\mathbf{p})\delta\mathbf{p} + 
 \frac{1}{2}\delta\mathbf{p}^T \mathbf{H}(\mathbf{p})\delta\mathbf{p}$$`
   - `\(\lambda_k(\mathbf{p})\)`는 **스칼라 함수**, `\(\mathbf{p}\)`는 **벡터**이므로, `\(\mathbf{J}(\mathbf{p})\)`는 Jacobian이 아닌 **gradient**, `\(\mathbf{H}(\mathbf{p})\)`는 Hessian
-  - scalar cost 함수 `\(\lambda_k(\mathbf{p})\)`를 vector `\(\mathbf{p}\)`에 대해 2차 근사화 한것 
+  - scalar cost 함수 `\(\lambda_k(\mathbf{p})\)`를 vector `\(\mathbf{p}\)`에 대해 2차 approximation 한것 
 ]
 ---
 ## BALM Optimization
@@ -293,8 +300,34 @@ f(\overline{\mathbf{x}}) +
   - j번째 scan에서 회전/이동을 할것인지에 대한 update, pose가 변하면 global point `\(\mathbf{p}_i\)`도 변하므로 `\(\delta\mathbf{p}_i\)` 생김,
 - 회전은 지수맵으로 업데이트, translation은 벡터 덧셈으로 업데이트
 `$$\mathbf{T}_j = (\mathbf{R}_j, \mathbf{t}_j); \quad \mathbf{T}_j \boxplus \delta \mathbf{T}_j = (\mathbf{R}_j \exp (\phi_j^\wedge), \mathbf{t}_j + \delta \mathbf{t}_j)$$`
+
+- pose `\(\mathbf{T}\)` pertubation
+  - translation은 `\(\mathbb{R}^3\)`에서 벡터 덧셈 가능, rotation은 **SO(3)**에서 지수맵으로 업데이트
+  - global point : `\(\mathbf{p}_i'=\mathbf{R}_{s_i}\mathbf{p}_{f_i} + \mathbf{t}_{s_i}\)`, perturbation 이후는 `\(\mathbf{p}_i'=\mathbf{R}_{s_i} \exp(\phi_{s_i}^\wedge) \mathbf{p}_{f_i} + \mathbf{t}_{s_i} + \delta \mathbf{t}_{s_i}\)`
+]
+???
 `$$\mathbf{p}_i = \mathbf{R}_{s_i} \exp(\phi_{s_i}^\wedge) \mathbf{p}_{f_i} + \mathbf{t}_{s_i}; \quad \frac{\delta \mathbf{p}_i}{\delta \mathbf{T}_{s_i}} = \left[ -\mathbf{R}_{s_i} (\mathbf{p}_{f_i})^\wedge \quad \mathbf{I} \right]$$`
 `$$\mathbf{D}=\frac{\delta {\mathbf{p}}}{\delta {\mathbf{T}}}, \quad \delta{\mathbf{p}}=\mathbf{D}\delta{\mathbf{T}}$$`
+---
+## BALM Optimization
+.nt-02.f-80[
+- `\(\exp(\phi^\wedge)\)`를 taylor전개를 하면 `\(\exp(\phi^\wedge) \approx \mathbf{I} + \phi^\wedge + \frac{1}{2}(\phi^\wedge)^2 + \dots\)`로, `\(\exp(\phi^\wedge) \approx \mathbf{I} + \phi^\wedge\)`와 같다
+`$$\begin{align*}
+\mathbf{p}'_i &amp;\approx 
+\mathbf{R}_{s_i}(\mathbf{I} + \phi_{s_i}^\wedge)\mathbf{p}^f_i + \mathbf{t}_{s_i} + \delta\mathbf{t}_{s_i} \\[2ex]
+&amp;= 
+\mathbf{R}_{s_i}\mathbf{p}^f_i + \mathbf{t}_{s_i} + \mathbf{R}_{s_i}\phi_{s_i}^\wedge\mathbf{p}^f_i + \delta\mathbf{t}_{s_i}
+\end{align*}$$`
+`$$\delta\mathbf{p}_i = \mathbf{p}_i' - \mathbf{p}_i \approx \mathbf{R}_{s_i}\phi_{s_i}^\wedge\mathbf{p}^f_i + \delta\mathbf{t}_{s_i}$$`
+- skew-symmetric matrix 특성 이용해서, `\(\phi^\wedge\mathbf{p}=-\mathbf{p}^\wedge\phi\)`
+`$$\delta\mathbf{p}_i \approx -\mathbf{R}_{s_i}(\mathbf{p}^f_i)^\wedge \phi_{s_i} + \delta\mathbf{t}_{s_i}$$`
+- 행렬 형태 적용하면 `\(\delta\mathbf{p}_i = \left[ -\mathbf{R}_{s_i}(\mathbf{p}^f_i)^\wedge \quad \mathbf{I} \right] \begin{bmatrix} \boldsymbol{\phi}_{s_i} \\ \delta\mathbf{t}_{s_i} \end{bmatrix}\)`, `\(\mathbf{D}\)`로 정리하면,
+`$$\mathbf{D}=\frac{\delta {\mathbf{p}}}{\delta {\mathbf{T}}}, \quad \delta{\mathbf{p}}=\mathbf{D}\delta{\mathbf{T}}$$`
+]
+---
+## BALM Optimization
+.nt-02.f-85[
+- pose `\(\mathbf{T}\)` perturbation
 ]
 ---
 ## BALM Optimization
@@ -311,8 +344,6 @@ f(\overline{\mathbf{x}}) +
 `$$\lambda_k(\mathbf{T} \boxplus \delta\mathbf{T}) \approx 
 \lambda_k(\mathbf{T}) + \bar{\mathbf{J}}\delta\mathbf{T} + 
 \frac{1}{2}\delta\mathbf{T}^\top \bar{\mathbf{H}} \delta\mathbf{T}$$`
-
-  
 ]
 
 ---
@@ -322,17 +353,19 @@ f(\overline{\mathbf{x}}) +
 `$$(\bar{\mathbf{H}}(\mathbf{T}) + \mu\mathbf{I})\delta\mathbf{T}^* = -\bar{\mathbf{J}}(\mathbf{T})^\top$$`
   - `\(\mu\)` : damping term, `\(\delta\mathbf{T}^*\)` : update할 pose perturbation
   
-- eigenvalue cost를 2차 근사화하고, LM Update방법을 이용해 pose perturbation `\(\delta\mathbf{T}^*\)`를 구하는 과정
-- **즉, Newton method처럼 2차 근사화를 하고, chain rule로 pose perturbation에 대한 근사식을 구한 후, LM update 방법을 이용해서 pose perturbation `\(\delta\mathbf{T}^*\)`를 구하는 과정**
-  
+- eigenvalue cost를 2차 approximation하고, LM Update방법을 이용해 pose perturbation `\(\delta\mathbf{T}^*\)`를 구하는 과정
+
+]
+---
+## Conclusion
+.nt-02.f-85[
+- **즉, Newton method처럼 2차 approximation를 하고, chain rule로 pose perturbation에 대한 근사식을 구한 후, LM update 방법을 이용해서 pose perturbation `\(\delta\mathbf{T}^*\)`를 구하는 과정**
 ]
 
 
 
-
-
 ???
-근사화 방법? -&gt; 테일러 전개
+approximation 방법? -&gt; 테일러 전개
 gradient : 스칼라를 벡터로 미분 -&gt; 행벡터 1xn
 hessian : gradient를 벡터로 미분 -&gt; 행렬 nxn
 jacobian : 오차벡터를 벡터로 미분 -&gt; 행렬 mxn
