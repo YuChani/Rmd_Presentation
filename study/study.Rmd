@@ -294,10 +294,9 @@ $$\lambda_k(\mathbf{p} + \delta\mathbf{p}) \approx
 $$\mathbf{T}_j=[\mathbf{R}_j \quad \mathbf{t}_j] \rightarrow
 \delta \mathbf{T}_j = \left[ \boldsymbol{\phi}_j^\top \quad \delta \mathbf{t}_j^\top \right]^\top$$
   - j번째 scan에서 회전/이동을 할것인지에 대한 update, pose가 변하면 global point $\mathbf{p}_i$도 변하므로 $\delta\mathbf{p}_i$ 생김,
-- 회전은 지수맵으로 업데이트, translation은 벡터 덧셈으로 업데이트
+- rotation은 지수맵으로 업데이트, translation은 벡터 덧셈으로 업데이트
 $$\mathbf{T}_j = (\mathbf{R}_j, \mathbf{t}_j); \quad \mathbf{T}_j \boxplus \delta \mathbf{T}_j = (\mathbf{R}_j \exp (\phi_j^\wedge), \mathbf{t}_j + \delta \mathbf{t}_j)$$
 
-- pose $\mathbf{T}$ pertubation
   - translation은 $\mathbb{R}^3$에서 벡터 덧셈 가능, rotation은 **SO(3)**에서 지수맵으로 업데이트
   - global point : $\mathbf{p}_i'=\mathbf{R}_{s_i}\mathbf{p}_{f_i} + \mathbf{t}_{s_i}$, perturbation 이후는 $\mathbf{p}_i'=\mathbf{R}_{s_i} \exp(\phi_{s_i}^\wedge) \mathbf{p}_{f_i} + \mathbf{t}_{s_i} + \delta \mathbf{t}_{s_i}$
 ]
@@ -317,13 +316,8 @@ $$\begin{align*}
 $$\delta\mathbf{p}_i = \mathbf{p}_i' - \mathbf{p}_i \approx \mathbf{R}_{s_i}\phi_{s_i}^\wedge\mathbf{p}^f_i + \delta\mathbf{t}_{s_i}$$
 - skew-symmetric matrix 특성 이용해서, $\phi^\wedge\mathbf{p}=-\mathbf{p}^\wedge\phi$
 $$\delta\mathbf{p}_i \approx -\mathbf{R}_{s_i}(\mathbf{p}^f_i)^\wedge \phi_{s_i} + \delta\mathbf{t}_{s_i}$$
-- 행렬 형태 적용하면 $\delta\mathbf{p}_i = \left[ -\mathbf{R}_{s_i}(\mathbf{p}^f_i)^\wedge \quad \mathbf{I} \right] \begin{bmatrix} \boldsymbol{\phi}_{s_i} \\ \delta\mathbf{t}_{s_i} \end{bmatrix}$, $\mathbf{D}$로 정리하면,
+- 행렬 형태 적용하면 $\mathbf{D}=\delta\mathbf{p}_i = \left[ -\mathbf{R}_{s_i}(\mathbf{p}^f_i)^\wedge \quad \mathbf{I} \right] \begin{bmatrix} \boldsymbol{\phi}_{s_i} \\ \delta\mathbf{t}_{s_i} \end{bmatrix}$ 정리하면,
 $$\mathbf{D}=\frac{\delta {\mathbf{p}}}{\delta {\mathbf{T}}}, \quad \delta{\mathbf{p}}=\mathbf{D}\delta{\mathbf{T}}$$
-]
----
-## BALM Optimization
-.nt-02.f-85[
-- pose $\mathbf{T}$ perturbation
 ]
 ---
 ## BALM Optimization
@@ -354,9 +348,28 @@ $$(\bar{\mathbf{H}}(\mathbf{T}) + \mu\mathbf{I})\delta\mathbf{T}^* = -\bar{\math
 ]
 ---
 ## Conclusion
-.nt-02.f-85[
+.nt-02.f-90[
+- 기하학적인 관점에서 planar cost는 **projection**, edge cost는 **rejection**으로 표현 가능
+
+- BALM의 목적함수는 eigenvalue cost로 표현 가능, eigenvalue cost는 스칼라 함수이므로, point vector에 대한 2차 Taylor approximation 가능
+
 - **즉, Newton method처럼 2차 approximation를 하고, chain rule로 pose perturbation에 대한 근사식을 구한 후, LM update 방법을 이용해서 pose perturbation $\delta\mathbf{T}^*$를 구하는 과정**
+
+- local BA를 통해 일관된 local map을 만들 수 있고, local map이 일관되면 global map도 일관되게 됨
 ]
+---
+## Limitation
+.nt-02.f-90[
+- initial guess가 좋지 않으면, local minimum에 빠지거나 voxelization이 안정적으로 구성되지않음 
+-> keyframe 기반 local BA 채용
+
+- feature가 부족한 환경에서 결과가 안좋음
+-> LIO계열로 변경하거나, raw point cloud를 이용하는 방법으로 변경
+
+- Loop closure의 부재로 loop가 있는 환경에서는 drift 발생
+-> Loop closure 추가하거나 STD같은 place recognition 방법 추가
+]
+
 
 
 
