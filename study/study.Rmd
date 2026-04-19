@@ -100,10 +100,11 @@ $$y \in \mathbb{R}, \mathbf{x}=[x_1, x_2, \dots, x_n]^\top \in \mathbb{R}^n$$
 $$\frac{\partial y}{\partial \mathbf{x}} = \left[ \frac{\partial y}{\partial x_1}, \frac{\partial y}{\partial x_2}, \dots, \frac{\partial y}{\partial x_n} \right] \in \mathbb{R}^{1 \times n}$$
 $$\nabla y = (\frac{\partial y}{\partial \mathbf{x}})^\top \in \mathbb{R}^{n\times 1}$$
   - 스칼라 함수 $y$를 벡터 $\mathbf{x}$로 편미분하면, 편미분 결과는 $\mathbf{x}$의 각 원소에 대한 편미분값을 원소로 하는 행벡터가 됨
+]
+???
 $$\frac{\partial(\mathbf{x}^\top \mathbf{A} \mathbf{x})}{\partial \mathbf{x}} = 
 2\mathbf{x}^\top \mathbf{A} \in \mathbb{R}^{1 \times n}$$
 $$\mathbf{A}=\mathbf{A}^\top$$
-]
 ---
 ## Optimization
 .nt-02.f-85[
@@ -161,7 +162,7 @@ $$\mathbf{J} =
 
 ---
 ## Optimization
-.nt-02.pull-left-60.f-85[
+.nt-02.f-85[
   - **Gradient**
 $$\nabla f = (\frac{\partial f}{\partial \mathbf{x}})^\top$$
   - loss function이 가장 빨리 증가하는 방향, $-\nabla f$는 가장 빨리 감소하는 방향
@@ -173,12 +174,6 @@ $$\mathbf{H} = \frac{\partial \nabla f}{\partial \mathbf{x}}$$
   - Hessian은 표면이 어느정도로 휘어져있는지 알려줌
   - 방향의 곡률과 얼마나 조절해야하는지 알려주는 행렬
 ]
-.nt-02.pull-right-35.f-85[
-- gradient
-![:scale 100%](fig/gradient.png)
-- Hessian
-![:scale 100%](fig/hessian.png)
-]
 
 ---
 ## Optimization
@@ -187,7 +182,7 @@ $$\mathbf{H} = \frac{\partial \nabla f}{\partial \mathbf{x}}$$
 $$\mathbf{J} = \frac{\partial \mathbf{f}}{\partial \mathbf{x}} \in \mathbb{R}^{m \times n}$$
   - 벡터 함수 $\mathbf{f}$의 각 원소 $f_i$가 벡터 $\mathbf{x}$의 각 원소 $x_j$에 대해 어떻게 변화하는지 나타냄
   - Jacobian은 벡터 함수의 변화율을 나타냄. $\mathbf{f}$가 $\mathbf{x}$에 대해 어떻게 변화하는지 알려줌
-  - residual이 state 변화에 얼마나 민감한지 알려주는 행렬
+  - 입력 $\mathbf{x}$가 조금 변할 때, 출력 $\mathbf{f}$가 얼마나 변하는지 나타내는 행렬
 
 - 최적화 문제는 목적함수 $f(\mathbf{x})\in \mathbb{R}^m$가 주어졌을때 최소화하는 최적해 $\mathbf{x}^*\in \mathbb{R}^n$를 찾는 문제
 $$\mathbf{x}^* = \arg\min_{\mathbf{x}} f(\mathbf{x})$$
@@ -197,7 +192,7 @@ $$\mathbf{x}^* = \arg\min_{\mathbf{x}} f(\mathbf{x})$$
 ]
 ---
 ## Optimization
-.nt-02.f-85[
+.nt-02.pull-left-60.f-85[
   - **다변수 스칼라 함수 gradient 방법**
   - $f(\mathbf{x})\in\mathbb{R}, \mathbf{x} \in \mathbb{R}^n$를 $\mathbf{x}=\bar{\mathbf{x}}$에서 1차 approximation하면,
 $$f(\mathbf{x}) \approx f(\bar{\mathbf{x}}) + \nabla f(\bar{\mathbf{x}})^\top (\mathbf{x} - \bar{\mathbf{x}})$$
@@ -208,9 +203,13 @@ $$f(\mathbf{x}) \approx f(\bar{\mathbf{x}}) + \nabla f(\bar{\mathbf{x}})^\top (\
   - $\alpha$값으로 gradient가 얼만큼 가야하는지 결정
 - gradient는 방향정보, 1차 근사는 접평면근사, gradient descent는 기울기 반대방향으로 이동
 ]
+.nt-02.pull-right-35.f-85[
+- gradient descent
+![:scale 100%](fig/gradient.png)
+]
 ---
 ## Optimization
-.nt-02.f-85[
+.nt-02.pull-left-60.f-85[
   - **Newton 방법**
   - $f(\mathbf{x})\in\mathbb{R}, \mathbf{x}\in\mathbb{R}^n$을 한점 $\mathbf{x}=\bar{\mathbf{x}}$에서 2차 approximation하면,
 $$f(\mathbf{x}) \approx f(\bar{\mathbf{x}}) + \nabla f(\bar{\mathbf{x}})^\top (\mathbf{x} - \bar{\mathbf{x}}) + \frac{1}{2} (\mathbf{x} - \bar{\mathbf{x}})^\top \mathbf{H}(\bar{\mathbf{x}}) (\mathbf{x} - \bar{\mathbf{x}})$$
@@ -220,6 +219,10 @@ $$\mathbf{H}(\bar{\mathbf{x}})\delta\mathbf{x} = -\nabla f(\bar{\mathbf{x}})$$
 - 위 식의 해를 $\bar{\mathbf{x}} \leftarrow \bar{\mathbf{x}} + \delta \mathbf{x}$에 대입하면,
   
 - update : $\bar{\mathbf{x}} \leftarrow \bar{\mathbf{x}} - \mathbf{H}(\bar{\mathbf{x}})^{-1} \nabla f(\bar{\mathbf{x}})$
+]
+.nt-02.pull-right-35.f-85[
+- Hessian
+![:scale 100%](fig/hessian.png)
 ]
 ---
 ## Optimization
